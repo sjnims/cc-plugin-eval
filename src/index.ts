@@ -10,6 +10,7 @@ import "dotenv/config";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
+import chalk from "chalk";
 import { Command } from "commander";
 import YAML from "yaml";
 
@@ -292,6 +293,17 @@ const resumeHandlers: Record<PipelineStage, ResumeHandler> = {
 
 const program = new Command();
 
+// Configure styled help output (Commander v13+ feature)
+program.configureHelp({
+  styleTitle: (str) => chalk.bold.cyan(str),
+  styleCommandText: (str) => chalk.green(str),
+  styleCommandDescription: (str) => chalk.dim(str),
+  styleDescriptionText: (str) => str,
+  styleOptionText: (str) => chalk.yellow(str),
+  styleArgumentText: (str) => chalk.magenta(str),
+  styleSubcommandText: (str) => chalk.green(str),
+});
+
 program
   .name("cc-plugin-eval")
   .description("Claude Code plugin component triggering evaluation framework")
@@ -354,25 +366,38 @@ function extractCLIOptions(
   return cliOptions;
 }
 
+// =============================================================================
+// Pipeline Commands Group
+// =============================================================================
+program.commandsGroup("Pipeline Commands:");
+
 program
   .command("run")
   .description("Run full evaluation pipeline")
+  // Input Options Group
+  .optionsGroup("Input Options:")
   .option("-p, --plugin <path>", "Path to plugin directory")
   .option("-c, --config <path>", "Path to config file (default: seed.yaml)")
   .option("--marketplace <path>", "Evaluate all plugins in marketplace")
-  .option("--dry-run", "Generate scenarios without execution")
-  .option("--verbose", "Detailed progress output")
-  .option("--debug", "Enable debug output")
+  // Execution Mode Group (with v13.1 dual long flag aliases)
+  .optionsGroup("Execution Mode:")
+  .option("--dr, --dry-run", "Generate scenarios without execution")
   .option("--fast", "Only run previously failed scenarios")
   .option("--failed-run <id>", "Run ID to get failed scenarios from")
+  .option("--no-batch", "Force synchronous execution")
+  .option("--rewind", "Undo file changes after each scenario")
+  .option("--est, --estimate", "Show cost estimate before execution")
+  // Output Options Group
+  .optionsGroup("Output Options:")
+  .option("-o, --output <format>", "Output format: json|yaml|junit-xml|tap")
+  .option("-v, --verbose", "Detailed progress output")
+  .option("--debug", "Enable debug output")
+  // Testing Options Group
+  .optionsGroup("Testing Options:")
   .option(
     "--with-plugins <paths>",
     "Additional plugins for conflict testing (comma-separated)",
   )
-  .option("--output <format>", "Output format: json|yaml|junit-xml|tap")
-  .option("--estimate", "Show cost estimate before execution")
-  .option("--no-batch", "Force synchronous execution")
-  .option("--rewind", "Undo file changes after each scenario")
   .option("--semantic", "Enable semantic variation testing")
   .option(
     "--samples <n>",
@@ -665,6 +690,11 @@ program
       process.exit(1);
     }
   });
+
+// =============================================================================
+// State Management Commands Group
+// =============================================================================
+program.commandsGroup("State Management:");
 
 program
   .command("resume")
