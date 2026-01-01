@@ -240,7 +240,7 @@ describe("parseAgentScenarioResponse", () => {
   });
 
   it("should return empty array for invalid JSON", () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(vi.fn());
 
     const response = "Invalid JSON";
     const scenarios = parseAgentScenarioResponse(response, agent);

@@ -93,13 +93,13 @@ describe("runAnalysis integration", () => {
     expect(output.components.commands.length).toBeGreaterThanOrEqual(2);
 
     // Verify trigger understanding populated
-    expect(Object.keys(output.trigger_understanding.skills).length).toBe(
+    expect(Object.keys(output.trigger_understanding.skills)).toHaveLength(
       output.components.skills.length,
     );
-    expect(Object.keys(output.trigger_understanding.agents).length).toBe(
+    expect(Object.keys(output.trigger_understanding.agents)).toHaveLength(
       output.components.agents.length,
     );
-    expect(Object.keys(output.trigger_understanding.commands).length).toBe(
+    expect(Object.keys(output.trigger_understanding.commands)).toHaveLength(
       output.components.commands.length,
     );
   });
