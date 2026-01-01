@@ -4,7 +4,7 @@
  * Secondary evaluation method that assesses response quality,
  * validates edge cases, and confirms negative scenarios.
  *
- * Uses Anthropic's structured output for guaranteed JSON parsing.
+ * Uses Anthropic's beta structured output API for guaranteed JSON parsing.
  */
 
 import { withRetry } from "../../utils/retry.js";
@@ -278,7 +278,7 @@ function parseJudgeResponse(text: string): JudgeResponse {
 /**
  * Evaluate a scenario using the LLM judge.
  *
- * Uses structured output for guaranteed JSON parsing.
+ * Uses Anthropic's beta structured output API for guaranteed JSON parsing.
  *
  * @param client - Anthropic client
  * @param scenario - Test scenario
@@ -315,26 +315,21 @@ export async function evaluateWithLLMJudge(
   );
 
   const response = await withRetry(async () => {
-    // Note: The Anthropic SDK may use different parameter names.
-    // Checking SDK docs, structured output uses 'response_format' or similar.
-    // For now, using the pattern from the docs which shows outputFormat.
-    // If this doesn't work, we'll fall back to regular JSON parsing.
-    const result = await client.messages.create({
+    // Use Anthropic's beta structured output API
+    // The SDK automatically adds the required beta header
+    const result = await client.beta.messages.create({
       model: resolveModelId(config.model),
       max_tokens: config.max_tokens,
       messages: [{ role: "user", content: prompt }],
-      // @ts-expect-error - Structured output may not be in current types
-      response_format: {
+      betas: ["structured-outputs-2025-11-13"],
+      // Anthropic uses output_format with schema directly (not nested json_schema)
+      output_format: {
         type: "json_schema",
-        json_schema: {
-          name: "judge_response",
-          schema: JUDGE_RESPONSE_SCHEMA,
-          strict: true,
-        },
+        schema: JUDGE_RESPONSE_SCHEMA,
       },
     });
 
-    // Extract text content
+    // Extract text content from structured output response
     const textBlock = result.content.find((block) => block.type === "text");
     if (textBlock?.type !== "text") {
       throw new Error("No text block in structured output response");
