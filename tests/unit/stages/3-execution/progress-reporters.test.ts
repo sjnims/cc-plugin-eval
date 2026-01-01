@@ -19,10 +19,16 @@ import {
 } from "../../../../src/stages/3-execution/progress-reporters.js";
 
 describe("consoleProgress", () => {
+  let logSpy: ReturnType<typeof vi.spyOn>;
+  let errorSpy: ReturnType<typeof vi.spyOn>;
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
-    vi.spyOn(console, "log").mockImplementation(() => {});
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    logSpy = vi.spyOn(console, "log").mockImplementation(vi.fn());
+    errorSpy = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    stdoutSpy = vi
+      .spyOn(process.stdout, "write")
+      .mockImplementation(() => true);
   });
 
   afterEach(() => {
@@ -32,8 +38,8 @@ describe("consoleProgress", () => {
   it("logs stage start", () => {
     consoleProgress.onStageStart!("execution", 10);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining("="));
-    expect(console.log).toHaveBeenCalledWith(
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("="));
+    expect(logSpy).toHaveBeenCalledWith(
       expect.stringContaining("STAGE: EXECUTION (10 items)"),
     );
   });
@@ -52,10 +58,10 @@ describe("consoleProgress", () => {
 
     consoleProgress.onScenarioComplete!(result, 5, 10);
 
-    expect(process.stdout.write).toHaveBeenCalledWith(
+    expect(stdoutSpy).toHaveBeenCalledWith(
       expect.stringContaining("5/10 (50%)"),
     );
-    expect(process.stdout.write).toHaveBeenCalledWith(
+    expect(stdoutSpy).toHaveBeenCalledWith(
       expect.stringContaining("test-scenario-1"),
     );
   });
@@ -74,15 +80,13 @@ describe("consoleProgress", () => {
 
     consoleProgress.onScenarioComplete!(result, 1, 10);
 
-    expect(process.stdout.write).toHaveBeenCalledWith(
-      expect.stringContaining("❌"),
-    );
+    expect(stdoutSpy).toHaveBeenCalledWith(expect.stringContaining("❌"));
   });
 
   it("logs stage completion", () => {
     consoleProgress.onStageComplete!("execution", 5000, 10);
 
-    expect(console.log).toHaveBeenCalledWith(
+    expect(logSpy).toHaveBeenCalledWith(
       expect.stringContaining("execution complete: 10 items in 5.0s"),
     );
   });
@@ -99,7 +103,7 @@ describe("consoleProgress", () => {
 
     consoleProgress.onError!(new Error("Test error"), scenario);
 
-    expect(console.error).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining("Error in test-scenario: Test error"),
     );
   });
@@ -107,7 +111,7 @@ describe("consoleProgress", () => {
   it("logs errors without scenario info", () => {
     consoleProgress.onError!(new Error("Test error"), undefined);
 
-    expect(console.error).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining("Error: Test error"),
     );
   });
@@ -115,8 +119,8 @@ describe("consoleProgress", () => {
 
 describe("verboseProgress", () => {
   beforeEach(() => {
-    vi.spyOn(console, "log").mockImplementation(() => {});
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(vi.fn());
+    vi.spyOn(console, "error").mockImplementation(vi.fn());
   });
 
   afterEach(() => {
@@ -237,7 +241,7 @@ describe("silentProgress", () => {
 
 describe("jsonProgress", () => {
   beforeEach(() => {
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(vi.fn());
   });
 
   afterEach(() => {

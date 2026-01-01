@@ -234,18 +234,17 @@ describe("extractAllComponentKeywords", () => {
     const keywords = extractAllComponentKeywords(mockAnalysis);
     const uniqueKeywords = new Set(keywords);
 
-    expect(keywords.length).toBe(uniqueKeywords.size);
+    expect(keywords).toHaveLength(uniqueKeywords.size);
   });
 
   it("should filter out short words", () => {
     const keywords = extractAllComponentKeywords(mockAnalysis);
 
-    // Words <= 3 chars should be filtered (except full names)
-    for (const keyword of keywords) {
-      if (!keyword.includes("-")) {
-        expect(keyword.length).toBeGreaterThan(3);
-      }
-    }
+    // Words <= 3 chars should be filtered (except full names with hyphens)
+    const simpleKeywords = keywords.filter((k) => !k.includes("-"));
+    const shortKeywords = simpleKeywords.filter((k) => k.length <= 3);
+
+    expect(shortKeywords).toHaveLength(0);
   });
 });
 
@@ -432,7 +431,7 @@ describe("generateSemanticVariations", () => {
   });
 
   it("should return empty array on LLM error", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(vi.fn());
     mockClient.messages.create.mockRejectedValue(new Error("API error"));
 
     const variations = await generateSemanticVariations(
@@ -447,7 +446,7 @@ describe("generateSemanticVariations", () => {
   });
 
   it("should return empty array when no text content", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(vi.fn());
     const mockResponse = {
       content: [{ type: "tool_use", id: "123", name: "test", input: {} }],
     };

@@ -23,14 +23,16 @@ import type {
 } from "../../../../src/types/index.js";
 
 // Mock the Anthropic SDK
-vi.mock("@anthropic-ai/sdk", () => ({
-  default: vi.fn(() => ({
-    messages: {
+// Vitest 4 requires constructable functions for mocks used with `new`
+vi.mock("@anthropic-ai/sdk", () => {
+  const MockAnthropic = vi.fn(function (this: Record<string, unknown>) {
+    this.messages = {
       countTokens: vi.fn(),
       create: vi.fn(),
-    },
-  })),
-}));
+    };
+  });
+  return { default: MockAnthropic };
+});
 
 describe("resolveModelId", () => {
   it("should resolve haiku shorthand", () => {

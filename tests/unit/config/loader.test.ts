@@ -52,15 +52,8 @@ describe("validateConfig", () => {
       generation: { scenarios_per_component: 100 }, // Out of range
     };
 
-    try {
-      validateConfig(raw);
-      expect.fail("Should have thrown");
-    } catch (err) {
-      expect(err).toBeInstanceOf(ConfigValidationError);
-      expect((err as ConfigValidationError).message).toContain(
-        "scenarios_per_component",
-      );
-    }
+    expect(() => validateConfig(raw)).toThrow(ConfigValidationError);
+    expect(() => validateConfig(raw)).toThrow(/scenarios_per_component/);
   });
 });
 

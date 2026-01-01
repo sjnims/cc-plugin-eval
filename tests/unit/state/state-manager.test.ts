@@ -2,9 +2,7 @@
  * Tests for state management module.
  */
 
-import * as fs from "node:fs";
-import * as path from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type {
   AnalysisOutput,
@@ -51,7 +49,6 @@ import {
   getIncompleteScenarios,
   formatState,
   type PipelineState,
-  type PipelineStage,
 } from "../../../src/state/state-manager.js";
 import { readJson, writeJson, ensureDir } from "../../../src/utils/file-io.js";
 
