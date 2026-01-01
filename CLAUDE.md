@@ -91,7 +91,8 @@ Stage 1: Analysis → Stage 2: Generation → Stage 3: Execution → Stage 4: Ev
 
 ```text
 src/
-├── index.ts              # CLI entry point (dotenv MUST be first import)
+├── index.ts              # CLI entry point (env.js MUST be first import)
+├── env.ts                # Environment setup (dotenv with quiet: true)
 ├── config/               # YAML/JSON config loading with Zod validation
 ├── stages/
 │   ├── 1-analysis/       # Plugin parsing, trigger extraction
@@ -121,7 +122,7 @@ Create `.env` with:
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-**Critical**: `import 'dotenv/config'` must be the FIRST import in `src/index.ts`.
+**Critical**: `import './env.js'` must be the FIRST import in `src/index.ts` to load environment variables before other modules. The `env.ts` module configures dotenv with `quiet: true` to suppress v17+ runtime logging.
 
 ## Configuration
 

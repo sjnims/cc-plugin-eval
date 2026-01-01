@@ -2,10 +2,10 @@
 /**
  * cc-plugin-eval CLI entry point.
  *
- * CRITICAL: dotenv/config must be the FIRST import to ensure
+ * CRITICAL: env.js must be the FIRST import to ensure
  * environment variables are loaded before any other module.
  */
-import "dotenv/config";
+import "./env.js";
 
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
