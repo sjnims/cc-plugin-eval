@@ -1,0 +1,104 @@
+name: Claude Automated PR Review
+
+on:
+  # Using pull_request (not pull_request_target) for security:
+  # - pull_request_target exposes secrets to fork PRs, creating exfiltration risk
+  # - For fork PRs needing review, maintainers can manually @claude via claude.yml
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+
+# Cancel any in-progress review for the same PR when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # Skip bots and draft PRs
+    if: |
+      github.actor != 'dependabot[bot]' &&
+      github.actor != 'claude[bot]' &&
+      github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write # Required by claude-code-action for PR comments (GitHub API treats PR comments as issue comments)
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Review PR with Claude
+        uses: anthropics/claude-code-action@7145c3e0510bcdbdd29f67cc4a8c1958f1acfa2f # v1.0.27
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          prompt: |
+            Review this pull request for the cc-plugin-eval TypeScript evaluation framework.
+
+            ## Context
+            - Repository: ${{ github.repository }}
+            - PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}
+            - Author: ${{ github.event.pull_request.user.login }}
+
+            ## Instructions
+            1. Get the PR diff to understand what changed
+            2. Run `npm run typecheck` to check for TypeScript errors
+            3. Run `npm run lint` to check for ESLint issues
+            4. Run `npx prettier --check "src/**/*.ts"` to verify formatting
+            5. Review the changes against the criteria below
+            6. Post a summary comment with your findings
+
+            ## Review Criteria
+
+            ### TypeScript Quality
+            - No `any` types without justification
+            - Proper error handling with typed errors
+            - Imports use `.js` extension (ESM requirement)
+            - Zod schemas updated if types change
+
+            ### Architecture (4-Stage Pipeline)
+            - **Stage 1 - Analysis** (`src/stages/1-analysis/`): Correct trigger extraction
+            - **Stage 2 - Generation** (`src/stages/2-generation/`): LLM prompts well-structured
+            - **Stage 3 - Execution** (`src/stages/3-execution/`): Proper Agent SDK usage
+            - **Stage 4 - Evaluation** (`src/stages/4-evaluation/`): Programmatic detection preferred
+
+            ### Code Patterns
+            - Retry logic uses `src/utils/retry.ts`
+            - Concurrency uses `src/utils/concurrency.ts`
+            - Config validation uses Zod schemas
+            - State management enables resume capability
+
+            ### Testing
+            - Tests added for new functionality
+            - Tests updated for changed functionality
+            - 80% coverage threshold maintained
+
+            ### Documentation
+            - CLAUDE.md updated if architecture changes
+            - JSDoc comments for public APIs
+
+            ## Output Format
+            Post a PR comment with your review:
+            1. **Summary**: One-line assessment (looks good / needs changes / has concerns)
+            2. **What's Good**: Positive aspects of the PR
+            3. **Suggestions**: Improvements or issues found (if any)
+            4. **Checklist Verification**: Confirm key items are addressed
+
+            Be constructive and helpful. Focus on significant issues, not nitpicks.
+          claude_args: >-
+            --allowedTools "Bash(gh pr:*),Bash(npm ci),Bash(npm run typecheck),
+            Bash(npm run lint),Bash(npx prettier:*),Bash(npm test),Read,Glob,Grep"

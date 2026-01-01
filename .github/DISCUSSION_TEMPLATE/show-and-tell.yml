@@ -1,0 +1,130 @@
+title: "[Show & Tell]: "
+labels: ["showcase"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share what you've discovered! This could be:
+        - **Evaluation results** from running the framework on your plugin
+        - **Plugin improvements** you made based on evaluation findings
+        - **Configuration discoveries** that improved detection accuracy
+        - **CI/CD integrations** for automated plugin evaluation
+        - **Contributions** to the framework itself
+
+        **Tip**: Include relevant metrics, configuration snippets, or before/after comparisons.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: My showcase doesn't expose sensitive information (API keys, internal paths)
+          required: true
+
+  - type: dropdown
+    id: showcase-type
+    attributes:
+      label: What are you showcasing?
+      description: "Select the type of showcase"
+      options:
+        - Evaluation results from my plugin
+        - Plugin improvements based on findings
+        - Configuration that improved detection
+        - CI/CD or automation integration
+        - Framework contribution
+        - Interesting triggering behavior discovered
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component-type
+    attributes:
+      label: Component Type Evaluated
+      description: "Which plugin component types were involved?"
+      options:
+        - Skills
+        - Agents
+        - Commands
+        - Hooks
+        - MCP Servers
+        - Multiple types
+        - Not applicable
+    validations:
+      required: false
+
+  - type: dropdown
+    id: detection-mode
+    attributes:
+      label: Detection Mode Used
+      description: "How were triggers detected?"
+      options:
+        - Programmatic detection
+        - LLM judge
+        - Both (programmatic_first)
+        - Not applicable
+    validations:
+      required: false
+
+  - type: textarea
+    id: showcase
+    attributes:
+      label: What You're Sharing
+      description: "Describe what you built, discovered, or learned"
+    validations:
+      required: true
+
+  - type: textarea
+    id: results
+    attributes:
+      label: Results or Metrics
+      description: "Share any quantitative results if applicable"
+      placeholder: |
+        - Detection accuracy: X%
+        - False positives reduced by: Y%
+        - Scenarios generated: Z
+        - Evaluation duration: ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: learnings
+    attributes:
+      label: Key Learnings
+      description: "What insights might help others?"
+      placeholder: |
+        The evaluation revealed that...
+        A tip for others: ...
+        I was surprised to find...
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration Used
+      description: "Share relevant seed.yaml settings if helpful"
+      placeholder: |
+        ```yaml
+        # Relevant seed.yaml excerpt
+        ```
+    validations:
+      required: false
+
+  - type: textarea
+    id: links
+    attributes:
+      label: Links or Resources
+      description: "Repository, CI config, or relevant links"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Sharing preferences
+      options:
+        - label: This can be featured in project documentation
+          required: false
+        - label: Configuration snippets can be shared as examples
+          required: false

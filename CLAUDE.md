@@ -1,0 +1,151 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+cc-plugin-eval is a 4-stage evaluation framework for testing Claude Code plugin component triggering. It evaluates whether skills, agents, commands, hooks, and MCP servers correctly activate when expected.
+
+## Build & Development Commands
+
+```bash
+# Install dependencies
+npm install
+
+# Build
+npm run build          # Compiles TypeScript to dist/
+npm run dev            # Watch mode - recompiles on changes
+
+# Lint & Type Check
+npm run lint           # ESLint with TypeScript strict rules
+npm run lint:fix       # Auto-fix linting issues
+npm run typecheck      # tsc --noEmit
+
+# Test
+npm run test           # Run all tests with Vitest
+npm run test:watch     # Watch mode
+npm run test:coverage  # With coverage report (80% threshold)
+npm run test:ui        # Vitest UI in browser
+
+# Run a single test file
+npx vitest run tests/unit/stages/1-analysis/skill-analyzer.test.ts
+
+# Run tests matching a pattern
+npx vitest run -t "SkillAnalyzer"
+```
+
+## Additional Linters
+
+Run before committing:
+
+```bash
+# Prettier (code formatting)
+npx prettier --check "src/**/*.ts" "*.json" "*.md"
+npx prettier --write "src/**/*.ts" "*.json" "*.md"
+
+# Markdown
+markdownlint "*.md"
+markdownlint --fix "*.md"
+
+# YAML
+uvx yamllint -c .yamllint.yml seed.yaml .yamllint.yml
+
+# GitHub Actions
+actionlint .github/workflows/*.yml
+```
+
+## CLI Usage
+
+```bash
+# Full pipeline evaluation
+cc-plugin-eval run -p ./path/to/plugin
+
+# Individual stages
+cc-plugin-eval analyze -p ./path/to/plugin    # Stage 1 only
+cc-plugin-eval generate -p ./path/to/plugin   # Stages 1-2
+cc-plugin-eval execute -p ./path/to/plugin    # Stages 1-3
+
+# Dry-run (cost estimation only)
+cc-plugin-eval run -p ./plugin --dry-run
+
+# Resume interrupted run
+cc-plugin-eval resume -r <run-id>
+```
+
+## Architecture
+
+### 4-Stage Pipeline
+
+```text
+Stage 1: Analysis → Stage 2: Generation → Stage 3: Execution → Stage 4: Evaluation
+```
+
+| Stage             | Purpose                                                                   | Output            |
+| ----------------- | ------------------------------------------------------------------------- | ----------------- |
+| **1. Analysis**   | Parse plugin structure, extract triggers                                  | `analysis.json`   |
+| **2. Generation** | Create test scenarios (LLM for skills/agents, deterministic for commands) | `scenarios.json`  |
+| **3. Execution**  | Run scenarios via Claude Agent SDK with tool capture                      | `transcripts/`    |
+| **4. Evaluation** | Programmatic detection first, LLM judge for quality                       | `evaluation.json` |
+
+### Key Directory Structure
+
+```text
+src/
+├── index.ts              # CLI entry point (dotenv MUST be first import)
+├── config/               # YAML/JSON config loading with Zod validation
+├── stages/
+│   ├── 1-analysis/       # Plugin parsing, trigger extraction
+│   ├── 2-generation/     # Scenario generation (LLM + deterministic)
+│   ├── 3-execution/      # Agent SDK integration, tool capture via hooks
+│   └── 4-evaluation/     # Programmatic detection, LLM judge, conflict tracking
+├── state/                # Resume capability, checkpoint management
+├── types/                # TypeScript interfaces
+├── prompts/              # LLM prompt templates
+└── utils/                # Retry, concurrency, token estimation
+```
+
+### Detection Strategy
+
+**Programmatic detection is primary** - parse `Skill`, `Task`, and `SlashCommand` tool calls from transcripts for 100% confidence detection. LLM judge is secondary, used only for quality assessment and edge cases where programmatic detection fails.
+
+### Two SDK Integration Points
+
+1. **Anthropic SDK** (`@anthropic-ai/sdk`) - Used in Stages 2 and 4 for LLM calls (scenario generation, judgment)
+2. **Agent SDK** (`@anthropic-ai/claude-agent-sdk`) - Used in Stage 3 for execution with plugin loading
+
+### Environment Setup
+
+Create `.env` with:
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+**Critical**: `import 'dotenv/config'` must be the FIRST import in `src/index.ts`.
+
+## Configuration
+
+Main config is `seed.yaml`. Key settings:
+
+- `scope`: Enable/disable skill, agent, command, hook, MCP evaluation
+- `generation.diversity`: 0-1 ratio controlling base scenarios vs variations
+- `execution.disallowed_tools`: Block Write/Edit/Bash during evaluation
+- `evaluation.detection_mode`: `programmatic_first` (default) or `llm_only`
+
+## Code Conventions
+
+- ESM modules with NodeNext resolution
+- Strict TypeScript (all strict flags enabled, `noUncheckedIndexedAccess`)
+- Explicit return types on all functions
+- Import order: builtin → external → internal → parent → sibling
+- Prefix unused parameters with `_`
+- Use `type` imports for type-only imports (`import type { Foo }` or `import { type Foo }`)
+- 80% test coverage minimum (enforced by Vitest)
+
+## Key Implementation Details
+
+- **Retry with exponential backoff** in `src/utils/retry.ts` for transient API errors
+- **Semaphore-based concurrency** in `src/utils/concurrency.ts` for parallel execution
+- **Model pricing externalized** in `src/config/pricing.ts` for easy updates
+- **State checkpointing** after each stage enables resume on interruption
+- **Tool capture via PreToolUse hooks** during SDK execution for programmatic detection

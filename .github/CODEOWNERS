@@ -1,0 +1,64 @@
+# CODEOWNERS - Defines code ownership for automatic reviewer assignment
+#
+# Syntax: path/pattern @owner1 @owner2
+# Note: GitHub uses last-match-wins, so put specific rules AFTER general ones.
+# All owners must have write access to the repository.
+
+# =============================================================================
+# Default owner for everything
+# =============================================================================
+* @sjnims
+
+# =============================================================================
+# Source code - by stage
+# =============================================================================
+
+# Stage 1: Analysis (plugin parsing, trigger extraction)
+/src/stages/1-analysis/ @sjnims
+
+# Stage 2: Generation (scenario creation, cost estimation)
+/src/stages/2-generation/ @sjnims
+
+# Stage 3: Execution (Agent SDK integration, tool capture)
+/src/stages/3-execution/ @sjnims
+
+# Stage 4: Evaluation (detection, judgment, metrics)
+/src/stages/4-evaluation/ @sjnims
+
+# Core infrastructure
+/src/config/ @sjnims
+/src/state/ @sjnims
+/src/utils/ @sjnims
+/src/types/ @sjnims
+/src/prompts/ @sjnims
+
+# CLI entry point
+/src/index.ts @sjnims
+
+# =============================================================================
+# Tests
+# =============================================================================
+/tests/ @sjnims
+
+# =============================================================================
+# Configuration files
+# =============================================================================
+/seed.yaml @sjnims
+/tsconfig.json @sjnims
+/eslint.config.js @sjnims
+/vitest.config.ts @sjnims
+/package.json @sjnims
+
+# =============================================================================
+# GitHub configuration (workflows, templates, dependabot)
+# =============================================================================
+/.github/ @sjnims
+
+# =============================================================================
+# Critical documentation
+# =============================================================================
+/README.md @sjnims
+/CLAUDE.md @sjnims
+/CONTRIBUTING.md @sjnims
+/SECURITY.md @sjnims
+/LICENSE @sjnims

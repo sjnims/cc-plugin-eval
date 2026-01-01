@@ -1,0 +1,84 @@
+name: Semantic Labeler
+
+# Automatically labels PRs based on file paths and conventional commit titles
+# Uses github/issue-labeler for path-based labeling
+
+on:
+  pull_request:
+    types: [opened, synchronize, edited]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  label-by-path:
+    name: Label by File Path
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Label PR by path
+        uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5.0.0
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          configuration-path: .github/labeler.yml
+          sync-labels: true
+
+  label-by-title:
+    name: Label by Conventional Commit Title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Parse PR title for conventional commit type
+        id: parse
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Extract conventional commit type from PR title
+          # Matches: feat:, fix:, docs:, chore:, refactor:, test:, style:, perf:, ci:, build:
+          if [[ "$PR_TITLE" =~ ^(feat|fix|docs|chore|refactor|test|style|perf|ci|build)(\(.+\))?!?:\ .+ ]]; then
+            TYPE="${BASH_REMATCH[1]}"
+            echo "type=$TYPE" >> "$GITHUB_OUTPUT"
+            echo "Detected type: $TYPE"
+          else
+            echo "type=" >> "$GITHUB_OUTPUT"
+            echo "No conventional commit type detected"
+          fi
+
+      - name: Add label based on type
+        if: steps.parse.outputs.type != ''
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const typeToLabel = {
+              'feat': 'enhancement',
+              'fix': 'bug',
+              'docs': 'documentation',
+              'chore': 'chore',
+              'refactor': 'refactor',
+              'test': 'testing',
+              'style': 'style',
+              'perf': 'performance',
+              'ci': 'ci/cd',
+              'build': 'build'
+            };
+
+            const type = '${{ steps.parse.outputs.type }}';
+            const label = typeToLabel[type];
+
+            if (label) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: [label]
+              });
+              console.log(`Added label: ${label}`);
+            }

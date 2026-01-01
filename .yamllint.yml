@@ -1,0 +1,154 @@
+---
+# =============================================================================
+# yamllint Configuration
+# https://yamllint.readthedocs.io/
+# =============================================================================
+
+extends: default
+
+# =============================================================================
+# Files to Ignore
+# =============================================================================
+
+ignore:
+  - node_modules/
+  - dist/
+  - coverage/
+  - results/
+  - reports/
+  - .cache/
+  - "*.generated.yml"
+  - "*.generated.yaml"
+
+# =============================================================================
+# Rules Configuration
+# =============================================================================
+
+rules:
+  # ---------------------------------------------------------------------------
+  # Formatting Rules
+  # ---------------------------------------------------------------------------
+
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  line-length:
+    max: 120
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+
+  # ---------------------------------------------------------------------------
+  # Structural Rules
+  # ---------------------------------------------------------------------------
+
+  braces:
+    forbid: false
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+    min-spaces-inside-empty: 0
+    max-spaces-inside-empty: 0
+
+  brackets:
+    forbid: false
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+    min-spaces-inside-empty: 0
+    max-spaces-inside-empty: 0
+
+  colons:
+    max-spaces-before: 0
+    max-spaces-after: 1
+
+  commas:
+    max-spaces-before: 0
+    min-spaces-after: 1
+    max-spaces-after: 1
+
+  hyphens:
+    max-spaces-after: 1
+
+  # ---------------------------------------------------------------------------
+  # Content Rules
+  # ---------------------------------------------------------------------------
+
+  comments:
+    require-starting-space: true
+    ignore-shebangs: true
+    min-spaces-from-content: 1
+
+  comments-indentation: {}
+
+  empty-lines:
+    max: 1
+    max-start: 0
+    max-end: 0
+
+  empty-values:
+    forbid-in-block-mappings: false
+    forbid-in-flow-mappings: false
+
+  # ---------------------------------------------------------------------------
+  # Key Rules
+  # ---------------------------------------------------------------------------
+
+  key-duplicates: enable
+
+  key-ordering: disable
+
+  # ---------------------------------------------------------------------------
+  # Value Rules
+  # ---------------------------------------------------------------------------
+
+  truthy:
+    check-keys: false
+    allowed-values:
+      - "true"
+      - "false"
+      - "on"
+      - "off"
+      - "yes"
+      - "no"
+
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: false
+
+  float-values:
+    forbid-inf: false
+    forbid-nan: false
+    forbid-scientific-notation: false
+    require-numeral-before-decimal: true
+
+  # Quoted strings: disabled to allow flexibility in YAML authoring
+  # Enable if you want stricter control over quoting
+  quoted-strings: disable
+
+  # ---------------------------------------------------------------------------
+  # Document Rules
+  # ---------------------------------------------------------------------------
+
+  document-start: disable
+
+  document-end: disable
+
+  # ---------------------------------------------------------------------------
+  # Whitespace Rules
+  # ---------------------------------------------------------------------------
+
+  new-line-at-end-of-file: enable
+
+  new-lines:
+    type: unix
+
+  trailing-spaces: enable
+
+  # ---------------------------------------------------------------------------
+  # Anchors and Aliases
+  # ---------------------------------------------------------------------------
+
+  anchors:
+    forbid-undeclared-aliases: true
+    forbid-duplicated-anchors: true
+    forbid-unused-anchors: false

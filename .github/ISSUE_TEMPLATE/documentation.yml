@@ -1,0 +1,82 @@
+name: Documentation Improvement
+description: Suggest improvements to documentation
+title: "[Docs]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve our documentation!
+        Clear docs help everyone use the evaluation framework effectively.
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Which documentation needs improvement?
+      options:
+        - README.md
+        - CLAUDE.md
+        - Architecture documentation (in-code)
+        - Configuration reference (seed.yaml)
+        - CLI help / usage
+        - Inline code comments
+        - TypeScript types / interfaces
+        - Prompt templates
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Specific Location
+      description: File path or section name
+      placeholder: "e.g., README.md - CLI Usage section"
+    validations:
+      required: false
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: What's unclear or missing?
+      description: Describe what's confusing, incorrect, or missing
+      placeholder: The documentation doesn't explain...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Improvement
+      description: How would you improve it? (Feel free to include proposed wording)
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: issue-type
+    attributes:
+      label: Type of issue
+      options:
+        - label: Incorrect information
+        - label: Missing information
+        - label: Unclear explanation
+        - label: Code example needed
+        - label: Configuration example needed
+        - label: Outdated API usage
+        - label: Broken link
+        - label: Typo or grammar
+        - label: Other
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Screenshots, links, or other relevant information
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I'm willing to submit a PR with this improvement

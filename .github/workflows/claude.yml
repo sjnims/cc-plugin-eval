@@ -1,0 +1,69 @@
+name: Claude Code
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened]
+  pull_request_review:
+    types: [submitted]
+
+# Group by issue/PR number AND actor to prevent bot comments from canceling user
+# runs. Bot runs will be in separate groups and get skipped by job-level `if`.
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{
+      github.event.pull_request.number ||
+      github.event.issue.number ||
+      github.ref
+    }}-${{ github.actor }}
+  cancel-in-progress: true
+
+jobs:
+  claude:
+    # Only allow repo collaborators (OWNER, MEMBER, COLLABORATOR) to trigger @claude
+    # Exclude bots to prevent Claude's own comments from triggering/canceling runs
+    if: |
+      github.actor != 'dependabot[bot]' &&
+      github.actor != 'claude[bot]' &&
+      (
+        (github.event_name == 'issue_comment' &&
+         contains(github.event.comment.body, '@claude') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+        (github.event_name == 'pull_request_review_comment' &&
+         contains(github.event.comment.body, '@claude') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+        (github.event_name == 'pull_request_review' &&
+         contains(github.event.review.body, '@claude') &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association)) ||
+        (github.event_name == 'issues' &&
+         (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')) &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association))
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # Write access for pushing branches
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read # Required by claude-code-action to access workflow run data
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: "20"
+
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@7145c3e0510bcdbdd29f67cc4a8c1958f1acfa2f # v1.0.27
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          use_commit_signing: true

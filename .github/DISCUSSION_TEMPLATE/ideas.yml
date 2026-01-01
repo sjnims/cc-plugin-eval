@@ -1,0 +1,113 @@
+title: "[Idea]: "
+labels: ["enhancement", "idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing your idea! This framework evaluates Claude Code plugin triggering across 4 stages.
+
+        Ideas can be about **detection strategies**, **new component support**,
+        **CLI improvements**, **output formats**, or **configuration options**.
+
+        **Before submitting**: Check [existing ideas](../../discussions/categories/ideas).
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I've searched existing ideas and discussions
+          required: true
+
+  - type: dropdown
+    id: idea-type
+    attributes:
+      label: Idea Type
+      description: "What area does this idea improve?"
+      options:
+        - Detection strategies (programmatic or LLM)
+        - New component type support
+        - CLI commands or UX
+        - Output / reporting formats
+        - Configuration options (seed.yaml)
+        - Pipeline architecture
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: pipeline-stage
+    attributes:
+      label: Related Pipeline Stage
+      description: "Which stage would this affect?"
+      options:
+        - General / Multiple stages
+        - Stage 1 - Analysis
+        - Stage 2 - Generation
+        - Stage 3 - Execution
+        - Stage 4 - Evaluation
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component-type
+    attributes:
+      label: Component Type (if applicable)
+      description: "Does this relate to a specific plugin component type?"
+      options:
+        - Not component-specific
+        - Skill evaluation
+        - Agent evaluation
+        - Command evaluation
+        - Hook evaluation
+        - MCP Server evaluation
+    validations:
+      required: false
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Need
+      description: "What problem does this idea solve?"
+      placeholder: |
+        Example: "Programmatic detection misses skills that trigger via partial matches..."
+        Example: "The CLI doesn't provide progress indication during long evaluations..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Idea
+      description: "Describe your idea clearly"
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefit
+    attributes:
+      label: Expected Benefit
+      description: "How would this improve the framework?"
+      placeholder: |
+        - More accurate detection of...
+        - Better user experience when...
+        - Reduced false positives for...
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: "Have you considered other approaches?"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution interest
+      options:
+        - label: I'd be willing to help implement this idea
+          required: false

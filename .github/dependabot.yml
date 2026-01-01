@@ -1,0 +1,83 @@
+version: 2
+updates:
+  # GitHub Actions - Keep workflow action versions up to date
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    assignees:
+      - "sjnims"
+    reviewers:
+      - "sjnims"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      # Anthropic's action - core dependency, review carefully
+      claude-code-action:
+        patterns:
+          - "anthropics/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # All other minor/patch updates - safe for auto-merge
+      actions-minor-patch:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "anthropics/*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "actions/checkout"
+        update-types: ["version-update:semver-patch"]
+    open-pull-requests-limit: 5
+
+  # npm - Keep Node.js dependencies up to date
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    labels:
+      - "dependencies"
+      - "npm"
+    assignees:
+      - "sjnims"
+    reviewers:
+      - "sjnims"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      # Anthropic SDKs - core dependencies for plugin evaluation
+      anthropic-deps:
+        patterns:
+          - "@anthropic-ai/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Dev dependencies - low risk, group aggressively
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      # Production dependencies (excluding Anthropic)
+      production-dependencies:
+        dependency-type: "production"
+        exclude-patterns:
+          - "@anthropic-ai/*"
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 5

@@ -1,0 +1,51 @@
+plugin:
+  path: "./tests/fixtures/valid-plugin"
+
+scope:
+  skills: true
+  agents: true
+  commands: true
+  hooks: false
+  mcp_servers: false
+
+generation:
+  model: "claude-sonnet-4-5-20250929"
+  scenarios_per_component: 2
+  diversity: 0.5
+  max_tokens: 4000
+  reasoning_effort: "low"
+  semantic_variations: false
+
+execution:
+  model: "claude-sonnet-4-20250514"
+  max_turns: 3
+  timeout_ms: 30000
+  max_budget_usd: 1.0
+  session_isolation: true
+  permission_bypass: true
+  num_reps: 1
+  additional_plugins: []
+
+evaluation:
+  model: "claude-sonnet-4-5-20250929"
+  max_tokens: 2000
+  detection_mode: "programmatic_first"
+  reasoning_effort: "low"
+  num_samples: 1
+  aggregate_method: "average"
+  include_citations: false
+
+output:
+  format: "json"
+  include_cli_summary: true
+  junit_test_suite_name: "test-plugin-eval"
+
+dry_run: false
+estimate_costs: false
+batch_threshold: 50
+force_synchronous: true
+poll_interval_ms: 30000
+rewind_file_changes: false
+debug: false
+verbose: false
+max_concurrent: 5

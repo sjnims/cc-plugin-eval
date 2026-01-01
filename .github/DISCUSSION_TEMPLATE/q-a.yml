@@ -1,0 +1,108 @@
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about the evaluation framework? This could be about:
+        - **Running evaluations** with the CLI
+        - **Interpreting results** from evaluation output
+        - **Configuration** options in seed.yaml
+        - **Detection issues** (programmatic or LLM-based)
+        - **Contributing** to the framework
+
+        **Resources**: [README](../../blob/main/README.md) | [CLAUDE.md](../../blob/main/CLAUDE.md)
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I've checked the README and CLAUDE.md
+          required: true
+        - label: I've searched existing discussions
+          required: true
+
+  - type: dropdown
+    id: question-type
+    attributes:
+      label: Question Type
+      description: "What's your question about?"
+      options:
+        - Using the CLI commands
+        - Interpreting evaluation results
+        - Configuration (seed.yaml)
+        - Detection issues or failures
+        - SDK integration (Anthropic or Agent SDK)
+        - Contributing to the framework
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: pipeline-stage
+    attributes:
+      label: Pipeline Stage
+      description: "Which stage is your question related to?"
+      options:
+        - General / Not stage-specific
+        - Stage 1 - Analysis (plugin parsing)
+        - Stage 2 - Generation (scenario creation)
+        - Stage 3 - Execution (Agent SDK runs)
+        - Stage 4 - Evaluation (detection & judgment)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component-type
+    attributes:
+      label: Component Type
+      description: "Which plugin component type is involved?"
+      options:
+        - Not applicable
+        - Skill
+        - Agent
+        - Command
+        - Hook
+        - MCP Server
+        - Multiple types
+    validations:
+      required: false
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: "What would you like to know?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: "Any relevant details: error messages, configuration snippets, CLI output"
+      placeholder: |
+        ```
+        # Paste relevant output or config here
+        ```
+    validations:
+      required: false
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version
+      description: "Run `node --version` if this is about runtime issues"
+      placeholder: "e.g., v25.2.1"
+    validations:
+      required: false
+
+  - type: input
+    id: plugin-path
+    attributes:
+      label: Plugin Path Structure
+      description: "Describe the plugin structure if relevant (e.g., 'skills/ + agents/ + commands/')"
+      placeholder: "e.g., skills/foo.md, agents/bar.md"
+    validations:
+      required: false

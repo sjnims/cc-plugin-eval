@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "version": "v3.0",
+    "plugin_name": "test-plugin",
+    "scenario_id": "command-test-1",
+    "timestamp": "2026-01-01T00:00:00.000Z",
+    "model": "claude-sonnet-4-20250514"
+  },
+  "events": [
+    {
+      "id": "evt-1",
+      "type": "user",
+      "edit": {
+        "message": {
+          "role": "user",
+          "content": "/test-plugin:test-command src/index.ts"
+        }
+      }
+    },
+    {
+      "id": "evt-2",
+      "type": "assistant",
+      "edit": {
+        "message": {
+          "role": "assistant",
+          "content": "Running test-command on src/index.ts",
+          "tool_calls": [
+            {
+              "id": "tc-1",
+              "name": "SlashCommand",
+              "input": {
+                "command": "test-plugin:test-command",
+                "args": "src/index.ts"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

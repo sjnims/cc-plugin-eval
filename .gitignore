@@ -1,0 +1,162 @@
+# =============================================================================
+# Node.js / TypeScript Project
+# =============================================================================
+
+# Dependencies
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# =============================================================================
+# Testing
+# =============================================================================
+
+# Test coverage
+coverage/
+.vitest/
+
+# Test artifacts
+*.test-results.json
+
+# =============================================================================
+# Environment & Secrets
+# =============================================================================
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# Secrets (never commit these patterns)
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+.secrets/
+
+# =============================================================================
+# IDE & Editors
+# =============================================================================
+
+# JetBrains IDEs
+.idea/
+
+# VS Code (keep settings.json if you want shared workspace config)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Vim/Neovim
+*.swp
+*.swo
+*.swn
+*~
+.nvim/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# =============================================================================
+# Operating System
+# =============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.directory
+
+# =============================================================================
+# Logs & Debug
+# =============================================================================
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Application logs
+*.log
+logs/
+
+# Crash dumps
+*.dump
+core
+core.*
+
+# =============================================================================
+# Caches
+# =============================================================================
+
+# ESLint
+.eslintcache
+
+# TypeScript
+*.tsbuildinfo
+
+# Prettier
+.prettiercache
+
+# npm
+.npm/
+
+# =============================================================================
+# Project-Specific: Evaluation Framework
+# =============================================================================
+
+# Evaluation state and checkpoints
+.state/
+*.state.json
+
+# Evaluation output
+results/
+reports/
+transcripts/
+
+# Generated analysis artifacts
+analysis.json
+scenarios.json
+evaluation.json
+
+# Plugin cache during evaluation
+.cache/
+.plugin-cache/
+
+# Claude related files
+.claude/
+
+# =============================================================================
+# Temporary Files
+# =============================================================================
+
+*.tmp
+*.temp
+tmp/
+temp/
+.tmp/
+.temp/

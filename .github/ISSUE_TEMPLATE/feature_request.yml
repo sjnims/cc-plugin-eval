@@ -1,0 +1,111 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for the evaluation framework
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! This could be about detection strategies,
+        new component support, CLI improvements, or other framework enhancements.
+
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: Feature Type
+      description: What area does this feature improve?
+      options:
+        - Detection strategies (programmatic or LLM)
+        - New component type support
+        - CLI commands or UX
+        - Output / reporting formats
+        - Configuration schema (seed.yaml)
+        - Pipeline architecture
+        - SDK integration (Anthropic or Agent SDK)
+        - Resume / checkpoint functionality
+        - Cost estimation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Need
+      description: What problem does this feature solve?
+      placeholder: |
+        Example: "Programmatic detection misses skills with complex trigger patterns..."
+        Example: "The CLI doesn't show progress during long evaluation runs..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe what you'd like
+    validations:
+      required: true
+
+  - type: dropdown
+    id: pipeline-stage
+    attributes:
+      label: Pipeline Stage Affected
+      description: Which stage(s) would this affect?
+      options:
+        - General / Multiple stages
+        - Stage 1 - Analysis
+        - Stage 2 - Generation
+        - Stage 3 - Execution
+        - Stage 4 - Evaluation
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component-type
+    attributes:
+      label: Component Type (if applicable)
+      description: Does this relate to a specific plugin component type?
+      options:
+        - Not component-specific
+        - Skill evaluation
+        - Agent evaluation
+        - Command evaluation
+        - Hook evaluation
+        - MCP Server evaluation
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Other solutions you've thought about
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How important is this feature to you?
+      options:
+        - Critical - Blocking my work
+        - High - Would significantly improve my workflow
+        - Medium - Would be nice to have
+        - Low - Just a suggestion
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other context, examples, or references
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I'm willing to help implement this feature

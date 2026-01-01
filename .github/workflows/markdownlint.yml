@@ -1,0 +1,36 @@
+name: Markdown Lint
+
+on:
+  pull_request:
+    paths:
+      - "**.md"
+      - ".markdownlint.json"
+  push:
+    branches:
+      - main
+    paths:
+      - "**.md"
+      - ".markdownlint.json"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint Markdown Files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Run markdownlint
+        uses: articulate/actions-markdownlint@17b8abe7407cd17590c006ecc837c35e1ac3ed83 # v1.1.0
+        with:
+          config: .markdownlint.json
+          files: "**/*.md"
+          ignore: node_modules

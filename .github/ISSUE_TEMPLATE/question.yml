@@ -1,0 +1,82 @@
+name: Question
+description: Ask a question about using the evaluation framework
+title: "[Question]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question? We're here to help!
+
+        **Consider [GitHub Discussions](../../discussions) instead** - questions often
+        get faster community responses there, and the Q&A format is better suited
+        for back-and-forth conversation.
+
+        **Resources**: [README](../../blob/main/README.md) | [CLAUDE.md](../../blob/main/CLAUDE.md)
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I've checked the README and CLAUDE.md
+          required: true
+        - label: I've searched existing issues and discussions
+          required: true
+        - label: I've considered posting in GitHub Discussions instead
+          required: true
+
+  - type: dropdown
+    id: question-type
+    attributes:
+      label: Question Type
+      description: What's your question about?
+      options:
+        - Using the CLI
+        - Interpreting evaluation results
+        - Configuration options
+        - Detection behavior
+        - SDK integration
+        - Contributing to the project
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: pipeline-stage
+    attributes:
+      label: Related Pipeline Stage
+      description: Which stage is your question about?
+      options:
+        - General / Not stage-specific
+        - Stage 1 - Analysis
+        - Stage 2 - Generation
+        - Stage 3 - Execution
+        - Stage 4 - Evaluation
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: How do I...? Why does...? Can I...?
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried?
+      description: Steps you've already taken
+      placeholder: "I've tried... I looked at..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Configuration snippets, CLI output, or other relevant information
+    validations:
+      required: false

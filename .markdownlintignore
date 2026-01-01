@@ -1,0 +1,52 @@
+# =============================================================================
+# Markdownlint Ignore Patterns
+# =============================================================================
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Test coverage
+coverage/
+
+# =============================================================================
+# Generated Content
+# =============================================================================
+
+# Evaluation output
+results/
+reports/
+transcripts/
+
+# State files
+*.state.json
+
+# Auto-generated documentation
+*.generated.md
+CHANGELOG.md
+docs/api/
+
+# =============================================================================
+# External/Vendored Documentation
+# =============================================================================
+
+# Claude Code settings and docs
+.claude/docs/
+.claude/plan-merged.md
+
+# Third-party licenses
+LICENSE*.md
+LICENSES/
+
+# =============================================================================
+# Project-Specific Exclusions
+# =============================================================================
+
+# Internal planning documents
+.claude/*.md
+!.claude/CLAUDE.md
+
+# Cached content
+.cache/

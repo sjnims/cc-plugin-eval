@@ -1,0 +1,307 @@
+# GitHub Labels Configuration
+# Source of truth for all repository labels
+# Sync via: gh label create/edit or EndBug/label-sync action
+
+# =============================================================================
+# TYPE LABELS (GitHub defaults + common additions)
+# =============================================================================
+
+- name: "bug"
+  color: "d73a4a"
+  description: "Something isn't working"
+
+- name: "documentation"
+  color: "0075ca"
+  description: "Improvements or additions to documentation"
+
+- name: "duplicate"
+  color: "cfd3d7"
+  description: "This issue or pull request already exists"
+
+- name: "enhancement"
+  color: "a2eeef"
+  description: "New feature or request"
+
+- name: "invalid"
+  color: "e4e669"
+  description: "This doesn't seem right"
+
+- name: "question"
+  color: "d876e3"
+  description: "Further information is requested"
+
+- name: "refactor"
+  color: "fef65b"
+  description: "Code restructuring without behavior change"
+
+- name: "chore"
+  color: "c5def5"
+  description: "Maintenance tasks (dependencies, CI, tooling)"
+
+- name: "wontfix"
+  color: "ffffff"
+  description: "This will not be worked on"
+
+# =============================================================================
+# PIPELINE STAGE LABELS (cc-plugin-eval specific)
+# Color gradient: blue → teal → amber → green (analysis → evaluation)
+# =============================================================================
+
+- name: "stage:analysis"
+  color: "1e88e5"
+  description: "Stage 1: Plugin parsing and trigger extraction"
+
+- name: "stage:generation"
+  color: "26a69a"
+  description: "Stage 2: Test scenario generation (LLM + deterministic)"
+
+- name: "stage:execution"
+  color: "ff8f00"
+  description: "Stage 3: Agent SDK execution with tool capture"
+
+- name: "stage:evaluation"
+  color: "43a047"
+  description: "Stage 4: Programmatic detection and LLM judge"
+
+# =============================================================================
+# COMPONENT LABELS (infrastructure modules)
+# =============================================================================
+
+- name: "component:cli"
+  color: "455a64"
+  description: "CLI entry point (src/index.ts)"
+
+- name: "component:pipeline"
+  color: "5c6bc0"
+  description: "Pipeline orchestrator (src/pipeline.ts)"
+
+- name: "component:config"
+  color: "8d6e63"
+  description: "Configuration loading (src/config/)"
+
+- name: "component:state"
+  color: "78909c"
+  description: "Resume and checkpoint management (src/state/)"
+
+- name: "component:utils"
+  color: "90a4ae"
+  description: "Utilities: retry, concurrency, tokens (src/utils/)"
+
+- name: "component:prompts"
+  color: "b0bec5"
+  description: "LLM prompt templates (src/prompts/)"
+
+- name: "component:types"
+  color: "cfd8dc"
+  description: "TypeScript interfaces (src/types/)"
+
+# =============================================================================
+# SCOPE LABELS (plugin component types being evaluated)
+# Warm coral/pink family - distinct from stage colors
+# =============================================================================
+
+- name: "scope:skills"
+  color: "e91e63"
+  description: "Skill triggering evaluation"
+
+- name: "scope:agents"
+  color: "f44336"
+  description: "Agent triggering evaluation"
+
+- name: "scope:commands"
+  color: "ff5722"
+  description: "Command triggering evaluation"
+
+- name: "scope:hooks"
+  color: "ff7043"
+  description: "Hook evaluation (Phase 2)"
+
+- name: "scope:mcp"
+  color: "ff8a65"
+  description: "MCP server evaluation (Phase 3)"
+
+# =============================================================================
+# SDK LABELS (Anthropic SDK integrations)
+# =============================================================================
+
+- name: "sdk:anthropic"
+  color: "cc785c"
+  description: "Anthropic SDK usage (Stages 2 and 4)"
+
+- name: "sdk:agent"
+  color: "7e57c2"
+  description: "Claude Agent SDK usage (Stage 3)"
+
+# =============================================================================
+# PRIORITY LABELS (urgency classification)
+# Heat map: critical → low = hot → cool
+# =============================================================================
+
+- name: "priority:critical"
+  color: "b60205"
+  description: "Blocking, security, or breaking"
+
+- name: "priority:high"
+  color: "d93f0b"
+  description: "Important but not blocking"
+
+- name: "priority:medium"
+  color: "fbca04"
+  description: "Should be addressed"
+
+- name: "priority:low"
+  color: "0e8a16"
+  description: "Nice to have"
+
+# =============================================================================
+# STATUS LABELS (current work state)
+# =============================================================================
+
+- name: "status:blocked"
+  color: "e99695"
+  description: "Blocked by dependencies or external factors"
+
+- name: "status:in-progress"
+  color: "90caf9"
+  description: "Work in progress"
+
+- name: "status:needs-review"
+  color: "fff3b3"
+  description: "Ready for review"
+
+- name: "status:needs-repro"
+  color: "f9c4f4"
+  description: "Needs reproduction steps"
+
+- name: "status:needs-design"
+  color: "c5cae9"
+  description: "Needs design/architecture decision"
+
+# =============================================================================
+# EFFORT LABELS (time estimates)
+# =============================================================================
+
+- name: "effort:small"
+  color: "c2e0c6"
+  description: "< 1 hour"
+
+- name: "effort:medium"
+  color: "bfdadc"
+  description: "1-4 hours"
+
+- name: "effort:large"
+  color: "f9d0c4"
+  description: "> 4 hours"
+
+# =============================================================================
+# TESTING LABELS (test-related work)
+# Green family - testing/validation theme
+# =============================================================================
+
+- name: "test:unit"
+  color: "81c784"
+  description: "Unit test changes (tests/unit/)"
+
+- name: "test:integration"
+  color: "4caf50"
+  description: "Integration test changes"
+
+- name: "test:coverage"
+  color: "388e3c"
+  description: "Test coverage improvements"
+
+# =============================================================================
+# SPECIAL LABELS (framework-specific concerns)
+# =============================================================================
+
+- name: "breaking"
+  color: "bd2130"
+  description: "Breaking change - requires major version bump"
+
+- name: "security"
+  color: "ee0701"
+  description: "Security-related issue or improvement"
+
+- name: "performance"
+  color: "00acc1"
+  description: "Performance and efficiency improvements"
+
+- name: "cost-impact"
+  color: "ffa726"
+  description: "Affects API costs or budget calculations"
+
+- name: "detection"
+  color: "4db6ac"
+  description: "Programmatic detection logic"
+
+- name: "llm-judge"
+  color: "9575cd"
+  description: "LLM-based evaluation and judgment"
+
+- name: "resume"
+  color: "64b5f6"
+  description: "Resume and checkpoint functionality"
+
+- name: "batch-processing"
+  color: "29b6f6"
+  description: "Batch API processing"
+
+- name: "conflict-detection"
+  color: "ef5350"
+  description: "Cross-plugin conflict detection"
+
+# =============================================================================
+# COMMUNITY LABELS
+# =============================================================================
+
+- name: "help wanted"
+  color: "008672"
+  description: "Extra attention is needed"
+
+- name: "good first issue"
+  color: "7057ff"
+  description: "Good for newcomers"
+
+- name: "idea"
+  color: "c5def5"
+  description: "Community idea or suggestion"
+
+- name: "showcase"
+  color: "bfd4f2"
+  description: "Community showcase or demonstration"
+
+# =============================================================================
+# TRIAGE LABELS
+# =============================================================================
+
+- name: "triage"
+  color: "ededed"
+  description: "Needs initial review and categorization"
+
+# =============================================================================
+# DEPENDENCY LABELS (Dependabot)
+# =============================================================================
+
+- name: "dependencies"
+  color: "0366d6"
+  description: "Pull requests that update a dependency file"
+
+- name: "github-actions"
+  color: "000000"
+  description: "Pull requests that update GitHub Actions code"
+
+# =============================================================================
+# WORKFLOW LABELS (stale management)
+# =============================================================================
+
+- name: "stale"
+  color: "ededed"
+  description: "No recent activity - will be closed soon"
+
+- name: "pinned"
+  color: "fef2c0"
+  description: "Never mark as stale"
+
+- name: "roadmap"
+  color: "0e8a16"
+  description: "Long-term roadmap item - never mark as stale"

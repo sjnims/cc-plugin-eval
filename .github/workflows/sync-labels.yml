@@ -1,0 +1,36 @@
+name: Sync Labels
+
+on:
+  pull_request:
+    paths:
+      - ".github/labels.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/labels.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Sync Labels from labels.yml
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Sync labels
+        # Uses GITHUB_TOKEN automatically (provided by GitHub Actions)
+        # Dry-run on PRs to preview changes, apply on push to main
+        uses: EndBug/label-sync@52074158190acb45f3077f9099fea818aa43f97a # v2.3.3
+        with:
+          config-file: .github/labels.yml
+          delete-other-labels: false
+          dry-run: ${{ github.event_name == 'pull_request' }}

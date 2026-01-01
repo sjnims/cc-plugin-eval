@@ -1,0 +1,171 @@
+name: Bug Report
+description: Report a bug or issue with the evaluation framework
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please provide details to help diagnose and fix the issue.
+
+        **Tip**: Include the CLI command, relevant config, and any error output.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Tell us what happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Run `cc-plugin-eval run -p ./my-plugin`
+        2. Wait for Stage 2 to complete
+        3. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+    validations:
+      required: true
+
+  - type: dropdown
+    id: bug-type
+    attributes:
+      label: Bug Type
+      description: What kind of issue is this?
+      options:
+        - CLI command failure
+        - Analysis parsing error (Stage 1)
+        - Scenario generation issue (Stage 2)
+        - Execution failure / Agent SDK error (Stage 3)
+        - Detection inaccuracy (false positive/negative) (Stage 4)
+        - Configuration validation error
+        - Resume/checkpoint failure
+        - Cost estimation incorrect
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: pipeline-stage
+    attributes:
+      label: Pipeline Stage
+      description: Which stage did the bug occur in?
+      options:
+        - General / Not stage-specific
+        - Stage 1 - Analysis
+        - Stage 2 - Generation
+        - Stage 3 - Execution
+        - Stage 4 - Evaluation
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component-type
+    attributes:
+      label: Component Type Being Evaluated
+      description: What plugin component type were you evaluating?
+      options:
+        - Not applicable
+        - Skill
+        - Agent
+        - Command
+        - Hook
+        - MCP Server
+        - Multiple types
+    validations:
+      required: false
+
+  - type: dropdown
+    id: detection-mode
+    attributes:
+      label: Detection Mode
+      description: Which detection mode was in use?
+      options:
+        - Not applicable
+        - Programmatic detection
+        - LLM judge
+        - Both (programmatic_first)
+    validations:
+      required: false
+
+  - type: input
+    id: cli-command
+    attributes:
+      label: CLI Command Used
+      description: The exact command that triggered the bug
+      placeholder: "cc-plugin-eval run -p ./plugin --dry-run"
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Your environment details
+      placeholder: |
+        - OS: macOS 26.2
+        - Node.js: v25.2.1
+        - npm/bun: npm 11.7.0
+      render: yaml
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant seed.yaml Configuration
+      description: Include any relevant configuration settings
+      placeholder: |
+        scope:
+          skills: true
+          agents: true
+        evaluation:
+          detection_mode: programmatic_first
+      render: yaml
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs / CLI Output
+      description: Any relevant logs or error messages
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: transcript
+    attributes:
+      label: Transcript Excerpt (if applicable)
+      description: Relevant portion of the execution transcript
+      render: json
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Screenshots, links, or other relevant information
+    validations:
+      required: false

@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "version": "v3.0",
+    "plugin_name": "test-plugin",
+    "scenario_id": "skill-negative-1",
+    "timestamp": "2026-01-01T00:00:00.000Z",
+    "model": "claude-sonnet-4-20250514"
+  },
+  "events": [
+    {
+      "id": "evt-1",
+      "type": "user",
+      "edit": {
+        "message": {
+          "role": "user",
+          "content": "What is the weather like today?"
+        }
+      }
+    },
+    {
+      "id": "evt-2",
+      "type": "assistant",
+      "edit": {
+        "message": {
+          "role": "assistant",
+          "content": "I don't have access to real-time weather data, but I can help you with coding tasks instead."
+        }
+      }
+    }
+  ]
+}

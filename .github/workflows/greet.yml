@@ -1,0 +1,43 @@
+name: Greet First Time Contributors
+
+on:
+  pull_request_target:
+    types: [opened]
+  issues:
+    types: [opened]
+
+# Group by PR/issue number to prevent overlapping greetings for same item
+# cancel-in-progress: false ensures all first-timers get greeted
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  greeting:
+    # Skip bot accounts to avoid greeting automated tools
+    if: github.actor != 'dependabot[bot]' && github.actor != 'claude[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/first-interaction@1c4688942c71f71d4f5502a26ea67c331730fa4d # v3.1.0
+        with:
+          issue_message: >-
+            Thanks for opening your first issue! We appreciate your
+            contribution to cc-plugin-eval.
+            Please make sure you've provided all the requested information in
+            the issue template. Our maintainers will review this soon.
+          pr_message: |
+            Thanks for opening your first pull request! We appreciate your
+            contribution to cc-plugin-eval.
+
+            Please make sure:
+            - [ ] You've filled out the PR template completely
+            - [ ] All tests pass (`npm test`)
+            - [ ] Code is properly formatted (`npx prettier --check "src/**/*.ts"`)
+            - [ ] Types check successfully (`npm run typecheck`)
+
+            A maintainer will review your PR soon. Feel free to ask questions
+            if you need help!
