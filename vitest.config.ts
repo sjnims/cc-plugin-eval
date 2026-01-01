@@ -69,7 +69,7 @@ export default defineConfig({
       : ["default", "html"],
     outputFile: {
       html: "./coverage/test-report.html",
-      junit: "./test-report.junit.xml",
+      junit: "./coverage/test-report.junit.xml",
     },
 
     // =========================================================================

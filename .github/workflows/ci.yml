@@ -136,7 +136,7 @@ jobs:
         uses: codecov/test-results-action@6ba3fdeec616fb91fd6a389b788a2366835a0fa2 # v1.2.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: test-report.junit.xml
+          files: ./coverage/test-report.junit.xml
 
   build:
     name: Build
