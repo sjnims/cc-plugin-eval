@@ -151,6 +151,7 @@ Framework-specific concerns:
 |-------|-------|-------------|
 | `dependencies` | ![#0366d6](https://placehold.co/15x15/0366d6/0366d6.png) | Dependency updates |
 | `github-actions` | ![#000000](https://placehold.co/15x15/000000/000000.png) | GitHub Actions updates |
+| `npm` | ![#cb3837](https://placehold.co/15x15/cb3837/cb3837.png) | npm dependency updates |
 
 ### Workflow Labels
 
@@ -267,6 +268,6 @@ gh label list
 
 ## Label Count
 
-Current total: **~53 labels**
+Current total: **~54 labels**
 
 This is slightly more than typical due to the framework's multi-dimensional nature (stages + components + scopes), but each category is clearly organized and serves a distinct purpose.
