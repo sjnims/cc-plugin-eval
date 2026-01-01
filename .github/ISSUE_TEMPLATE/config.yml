@@ -4,8 +4,8 @@ contact_links:
     url: https://github.com/sjnims/cc-plugin-eval/discussions
     about: Ask questions, share ideas, and get help from the community (preferred for questions)
   - name: Claude Code Documentation
-    url: https://docs.anthropic.com/en/docs/build-with-claude/claude-code
+    url: https://code.claude.com/docs
     about: Official Claude Code documentation and guides
   - name: Agent SDK Documentation
-    url: https://github.com/anthropics/claude-agent-sdk-typescript
+    url: https://platform.claude.com/docs/en/agent-sdk/overview
     about: Claude Agent SDK used for plugin execution
