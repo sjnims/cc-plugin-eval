@@ -290,6 +290,10 @@
   color: "000000"
   description: "Pull requests that update GitHub Actions code"
 
+- name: "npm"
+  color: "cb3837"
+  description: "Pull requests that update npm dependencies"
+
 # =============================================================================
 # WORKFLOW LABELS (stale management)
 # =============================================================================

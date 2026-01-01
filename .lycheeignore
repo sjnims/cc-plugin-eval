@@ -1,5 +1,5 @@
 # =============================================================================
-# Lychee Link Checker Ignore Patterns
+# Lychee Link Checker Ignore Patterns (Regex)
 # https://lychee.cli.rs/
 # =============================================================================
 
@@ -8,130 +8,125 @@
 # =============================================================================
 
 # File protocol
-file://*
+file://.*
 
 # Localhost variants
 localhost
-localhost:*
-http://localhost*
-https://localhost*
+localhost:.*
+http://localhost.*
+https://localhost.*
 
 # IPv4 loopback
-127.0.0.1
-127.0.0.1:*
-http://127.0.0.1*
-https://127.0.0.1*
+127\.0\.0\.1
+127\.0\.0\.1:.*
+http://127\.0\.0\.1.*
+https://127\.0\.0\.1.*
 
 # All interfaces
-0.0.0.0
-0.0.0.0:*
+0\.0\.0\.0
+0\.0\.0\.0:.*
 
 # Local DNS
-*.local
-*.localhost
+.*\.local
+.*\.localhost
 
 # IPv6 loopback
 ::1
 \[::1\]
-\[::1\]:*
+\[::1\]:.*
 
 # =============================================================================
 # Private IP Ranges (RFC 1918)
 # =============================================================================
 
 # Class A: 10.0.0.0/8
-10.*
-10.*.*.*
+^10\..*
 
 # Class B: 172.16.0.0/12
-172.16.*
-172.17.*
-172.18.*
-172.19.*
-172.2*.*
-172.30.*
-172.31.*
+^172\.1[6-9]\..*
+^172\.2[0-9]\..*
+^172\.3[0-1]\..*
 
 # Class C: 192.168.0.0/16
-192.168.*
+^192\.168\..*
 
 # Link-local (RFC 3927)
-169.254.*
+^169\.254\..*
 
 # =============================================================================
 # RFC Reserved Domains (RFC 2606, RFC 6761)
 # =============================================================================
 
 # Example domains
-example.com
-example.org
-example.net
-*.example.com
-*.example.org
-*.example.net
+example\.com
+example\.org
+example\.net
+.*\.example\.com
+.*\.example\.org
+.*\.example\.net
 
 # Testing domains
-*.test
-*.invalid
-*.localhost
-*.local
+.*\.test$
+.*\.invalid$
+.*\.localhost$
+.*\.local$
 
 # =============================================================================
 # Common Documentation Placeholders
 # =============================================================================
 
 # Generic placeholders
-your-domain.com
-my-domain.com
-placeholder.com
-your-site.com
-my-site.com
-your-api.com
-my-app.com
+your-domain\.com
+my-domain\.com
+placeholder\.com
+your-site\.com
+my-site\.com
+your-api\.com
+my-app\.com
 
 # User-specific placeholders
-*.yourcompany.com
-api.your-service.com
-your-username.github.io
+.*\.yourcompany\.com
+api\.your-service\.com
+your-username\.github\.io
 
 # Internal domains
-*.internal
-*.corp
-*.lan
+.*\.internal
+.*\.corp
+.*\.lan
 
 # =============================================================================
 # Protocol Schemes That May Not Resolve
 # =============================================================================
 
 # Email links (can't verify without sending)
-mailto:*
+mailto:.*
 
 # Custom app protocols
-vscode://*
-jetbrains://*
-slack://*
+vscode://.*
+jetbrains://.*
+slack://.*
 
 # =============================================================================
 # API Endpoints
 # =============================================================================
 
 # Anthropic API (requires authentication)
-api.anthropic.com/internal/*
-api.anthropic.com/v1/*
+api\.anthropic\.com/internal/.*
+api\.anthropic\.com/v1/.*
 
 # Generic API patterns
-api.*/internal/*
-*/api/v*/private/*
+api\..*/internal/.*
+.*/api/v.*/private/.*
 
 # =============================================================================
 # Rate-Limited or Authenticated Services
 # =============================================================================
 
 # GitHub API (rate limited without auth)
-api.github.com/*
+api\.github\.com/.*
 
 # npm registry
-registry.npmjs.org/*
+registry\.npmjs\.org/.*
 
 # =============================================================================
 # Generated/Dynamic Content
@@ -144,8 +139,8 @@ transcripts/
 coverage/
 
 # State files
-*.state.json
-*.checkpoint.json
+.*\.state\.json
+.*\.checkpoint\.json
 
 # Generated documentation
-docs/api/*
+docs/api/.*
