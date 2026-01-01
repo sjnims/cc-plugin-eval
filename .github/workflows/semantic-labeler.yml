@@ -1,84 +1,247 @@
 name: Semantic Labeler
 
-# Automatically labels PRs based on file paths and conventional commit titles
-# Uses github/issue-labeler for path-based labeling
+# Claude-powered semantic labeling for both issues and PRs
+# Replaces the path-based labeler with content-aware categorization
 
 on:
+  issues:
+    types: [opened, edited]
   pull_request:
     types: [opened, synchronize, edited]
 
+# Cancel in-progress runs on subsequent triggers
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-  pull-requests: write
-
 jobs:
-  label-by-path:
-    name: Label by File Path
+  label-issue:
+    name: Label Issue
+    # Skip bot-created issues to prevent potential loops
+    if: |
+      github.event_name == 'issues' &&
+      github.actor != 'dependabot[bot]' &&
+      github.actor != 'claude[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+      actions: read
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - name: Label PR by path
-        uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5.0.0
         with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          configuration-path: .github/labeler.yml
-          sync-labels: true
+          fetch-depth: 1
 
-  label-by-title:
-    name: Label by Conventional Commit Title
+      - name: Label issue with Claude
+        uses: anthropics/claude-code-action@7145c3e0510bcdbdd29f67cc4a8c1958f1acfa2f # v1.0.27
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Analyze this GitHub issue and apply appropriate labels.
+
+            ## Issue Details
+            - Repository: ${{ github.repository }}
+            - Issue #${{ github.event.issue.number }}
+            - Title: ${{ github.event.issue.title }}
+            - Author: ${{ github.event.issue.user.login }}
+
+            ## Issue Body
+            ${{ github.event.issue.body }}
+
+            ## Instructions
+
+            Based on the issue content, determine and apply appropriate labels using `gh issue edit`.
+
+            ### Label Categories
+
+            **TYPE (choose ONE):**
+            - `bug` - Something isn't working correctly
+            - `enhancement` - New feature or improvement request
+            - `documentation` - Documentation improvements or additions
+            - `question` - Asking for help or clarification
+            - `refactor` - Code restructuring without behavior change
+            - `chore` - Maintenance tasks (dependencies, CI, etc.)
+
+            **PIPELINE STAGE (choose if applicable):**
+            - `stage:analysis` - Stage 1: Plugin parsing and trigger extraction
+            - `stage:generation` - Stage 2: Test scenario generation
+            - `stage:execution` - Stage 3: Agent SDK execution
+            - `stage:evaluation` - Stage 4: Programmatic detection and LLM judge
+
+            **COMPONENT (choose ALL that apply):**
+            - `component:cli` - CLI entry point
+            - `component:pipeline` - Pipeline orchestrator
+            - `component:config` - Configuration loading
+            - `component:state` - Resume and checkpoint management
+            - `component:utils` - Utilities (retry, concurrency, tokens)
+            - `component:prompts` - LLM prompt templates
+            - `component:types` - TypeScript interfaces
+            - `github-actions` - CI/CD and GitHub workflows
+
+            **SCOPE (choose if applicable - what plugin component type):**
+            - `scope:skills` - Skill triggering evaluation
+            - `scope:agents` - Agent triggering evaluation
+            - `scope:commands` - Command triggering evaluation
+            - `scope:hooks` - Hook evaluation
+            - `scope:mcp` - MCP server evaluation
+
+            **SDK (choose if applicable):**
+            - `sdk:anthropic` - Anthropic SDK usage (Stages 2 and 4)
+            - `sdk:agent` - Claude Agent SDK usage (Stage 3)
+
+            **PRIORITY (choose ONE based on impact/urgency):**
+            - `priority:critical` - Blocking, security issues, or data loss
+            - `priority:high` - Significant impact, should address soon
+            - `priority:medium` - Moderate impact, normal priority
+            - `priority:low` - Minor issues, nice to have
+
+            **EFFORT (choose ONE based on estimated complexity):**
+            - `effort:small` - < 1 hour of work
+            - `effort:medium` - 1-4 hours of work
+            - `effort:large` - > 4 hours of work
+
+            **SPECIAL (only if applicable):**
+            - `breaking` - Would require breaking changes
+            - `security` - Security-related issue
+            - `performance` - Performance improvements
+            - `cost-impact` - Affects API costs or budget calculations
+            - `detection` - Programmatic detection logic
+            - `llm-judge` - LLM-based evaluation and judgment
+            - `resume` - Resume and checkpoint functionality
+
+            **COMMUNITY (only if clearly appropriate):**
+            - `help wanted` - Could use community contribution
+            - `good first issue` - Good for newcomers
+
+            ### Rules
+            1. Always apply exactly ONE type label
+            2. Always apply exactly ONE priority label
+            3. Always apply exactly ONE effort label
+            4. Apply stage/component/scope/SDK labels only if clearly related
+            5. Apply special/community labels only when clearly applicable
+            6. Don't guess - if unsure about a category, skip it (except required ones)
+
+            ### Execution
+            Apply labels using:
+            ```bash
+            gh issue edit ${{ github.event.issue.number }} --add-label "label1,label2,label3"
+            ```
+
+            After applying labels, briefly explain your reasoning.
+          claude_args: |
+            --allowedTools "Bash(gh issue:*)"
+
+  label-pr:
+    name: Label Pull Request
+    if: |
+      github.event_name == 'pull_request' &&
+      github.actor != 'dependabot[bot]' &&
+      github.actor != 'claude[bot]' &&
+      github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+      actions: read
     steps:
-      - name: Parse PR title for conventional commit type
-        id: parse
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-        run: |
-          # Extract conventional commit type from PR title
-          # Matches: feat:, fix:, docs:, chore:, refactor:, test:, style:, perf:, ci:, build:
-          if [[ "$PR_TITLE" =~ ^(feat|fix|docs|chore|refactor|test|style|perf|ci|build)(\(.+\))?!?:\ .+ ]]; then
-            TYPE="${BASH_REMATCH[1]}"
-            echo "type=$TYPE" >> "$GITHUB_OUTPUT"
-            echo "Detected type: $TYPE"
-          else
-            echo "type=" >> "$GITHUB_OUTPUT"
-            echo "No conventional commit type detected"
-          fi
-
-      - name: Add label based on type
-        if: steps.parse.outputs.type != ''
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
-          script: |
-            const typeToLabel = {
-              'feat': 'enhancement',
-              'fix': 'bug',
-              'docs': 'documentation',
-              'chore': 'chore',
-              'refactor': 'refactor',
-              'test': 'testing',
-              'style': 'style',
-              'perf': 'performance',
-              'ci': 'ci/cd',
-              'build': 'build'
-            };
+          fetch-depth: 1
 
-            const type = '${{ steps.parse.outputs.type }}';
-            const label = typeToLabel[type];
+      - name: Label PR with Claude
+        uses: anthropics/claude-code-action@7145c3e0510bcdbdd29f67cc4a8c1958f1acfa2f # v1.0.27
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Analyze this pull request and apply appropriate labels.
 
-            if (label) {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                labels: [label]
-              });
-              console.log(`Added label: ${label}`);
-            }
+            ## PR Details
+            - Repository: ${{ github.repository }}
+            - PR #${{ github.event.pull_request.number }}
+            - Title: ${{ github.event.pull_request.title }}
+            - Author: ${{ github.event.pull_request.user.login }}
+
+            ## PR Description
+            ${{ github.event.pull_request.body }}
+
+            ## Instructions
+
+            1. First, get the PR diff to understand what changed:
+               ```bash
+               gh pr diff ${{ github.event.pull_request.number }}
+               ```
+
+            2. Analyze the changes and apply appropriate labels.
+
+            ### Label Categories
+
+            **TYPE (choose ONE based on the nature of changes):**
+            - `enhancement` - New feature or capability
+            - `bug` - Bug fix
+            - `documentation` - Documentation-only changes
+            - `refactor` - Code restructuring without behavior change
+            - `chore` - Maintenance (dependencies, CI config, tooling)
+
+            **PIPELINE STAGE (choose based on files changed):**
+            - `stage:analysis` - Changes to `src/stages/1-analysis/**`
+            - `stage:generation` - Changes to `src/stages/2-generation/**`
+            - `stage:execution` - Changes to `src/stages/3-execution/**`
+            - `stage:evaluation` - Changes to `src/stages/4-evaluation/**`
+
+            **COMPONENT (choose ALL that apply based on files changed):**
+            - `component:cli` - Changes to `src/index.ts`
+            - `component:pipeline` - Changes to `src/pipeline.ts`
+            - `component:config` - Changes to `src/config/**`
+            - `component:state` - Changes to `src/state/**`
+            - `component:utils` - Changes to `src/utils/**`
+            - `component:prompts` - Changes to `src/prompts/**`
+            - `component:types` - Changes to `src/types/**`
+            - `github-actions` - Changes to `.github/workflows/**`
+            - `dependencies` - Changes to `package.json` or `package-lock.json`
+
+            **SCOPE (choose if changes affect these areas):**
+            - `scope:skills` - Skill-related evaluation code
+            - `scope:agents` - Agent-related evaluation code
+            - `scope:commands` - Command-related evaluation code
+            - `scope:hooks` - Hook-related evaluation code
+            - `scope:mcp` - MCP-related evaluation code
+
+            **TESTING (choose if applicable):**
+            - `test:unit` - Changes to `tests/unit/**`
+            - `test:integration` - Changes to integration tests
+            - `test:coverage` - Test coverage improvements
+
+            **EFFORT (choose ONE based on diff size and complexity):**
+            - `effort:small` - Few files, simple changes
+            - `effort:medium` - Multiple files, moderate complexity
+            - `effort:large` - Many files, significant changes, or architectural impact
+
+            **SPECIAL (only if applicable):**
+            - `breaking` - Contains breaking changes
+            - `security` - Security-related changes
+            - `performance` - Performance improvements
+            - `cost-impact` - Affects API costs or budget calculations
+
+            ### Rules
+            1. Always apply exactly ONE type label
+            2. Apply stage/component labels based on actual files changed
+            3. Always apply exactly ONE effort label
+            4. Apply special labels only when clearly applicable
+            5. For type, infer from the PR title/description and nature of changes
+
+            ### Execution
+            Apply labels using:
+            ```bash
+            gh pr edit ${{ github.event.pull_request.number }} --add-label "label1,label2,label3"
+            ```
+
+            After applying labels, briefly explain your reasoning.
+          # PR job needs Read,Glob to analyze file changes for accurate component detection
+          claude_args: |
+            --allowedTools "Bash(gh pr:*),Read,Glob"
