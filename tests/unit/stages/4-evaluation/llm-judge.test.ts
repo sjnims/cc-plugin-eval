@@ -29,17 +29,28 @@ vi.mock("../../../../src/utils/retry.js", () => ({
 
 /**
  * Create a mock Anthropic client.
+ * Mocks both beta.messages.create (for structured output) and messages.create (for fallback).
  */
-function createMockClient(
-  responseText: string,
-): Anthropic & { messages: { create: Mock } } {
+function createMockClient(responseText: string): Anthropic & {
+  beta: { messages: { create: Mock } };
+  messages: { create: Mock };
+} {
+  const mockResponse = {
+    content: [{ type: "text", text: responseText }],
+  };
   return {
-    messages: {
-      create: vi.fn().mockResolvedValue({
-        content: [{ type: "text", text: responseText }],
-      }),
+    beta: {
+      messages: {
+        create: vi.fn().mockResolvedValue(mockResponse),
+      },
     },
-  } as unknown as Anthropic & { messages: { create: Mock } };
+    messages: {
+      create: vi.fn().mockResolvedValue(mockResponse),
+    },
+  } as unknown as Anthropic & {
+    beta: { messages: { create: Mock } };
+    messages: { create: Mock };
+  };
 }
 
 /**
@@ -363,15 +374,19 @@ describe("evaluateWithLLMJudge", () => {
       config,
     );
 
-    expect(mockClient.messages.create).toHaveBeenCalledTimes(1);
-    const callArgs = mockClient.messages.create.mock.calls[0]?.[0] as Record<
-      string,
-      unknown
-    >;
+    expect(mockClient.beta.messages.create).toHaveBeenCalledTimes(1);
+    const callArgs = mockClient.beta.messages.create.mock
+      .calls[0]?.[0] as Record<string, unknown>;
     expect(callArgs).toBeDefined();
     expect(callArgs["model"]).toBe("claude-sonnet-4-5-20250929");
     expect(callArgs["max_tokens"]).toBe(2048);
     expect(callArgs["messages"]).toHaveLength(1);
+    // Verify structured output parameters
+    expect(callArgs["betas"]).toContain("structured-outputs-2025-11-13");
+    expect(callArgs["output_format"]).toEqual({
+      type: "json_schema",
+      schema: expect.any(Object),
+    });
   });
 
   it("should parse structured output response correctly", async () => {
@@ -483,6 +498,15 @@ describe("evaluateWithLLMJudge", () => {
 
   it("should throw when no text block in response", async () => {
     const mockClient = {
+      beta: {
+        messages: {
+          create: vi.fn().mockResolvedValue({
+            content: [
+              { type: "tool_use", id: "tc-1", name: "test", input: {} },
+            ],
+          }),
+        },
+      },
       messages: {
         create: vi.fn().mockResolvedValue({
           content: [{ type: "tool_use", id: "tc-1", name: "test", input: {} }],
@@ -528,26 +552,21 @@ describe("evaluateWithFallback", () => {
     );
 
     expect(result.quality_score).toBe(9);
-    expect(mockClient.messages.create).toHaveBeenCalledTimes(1);
+    expect(mockClient.beta.messages.create).toHaveBeenCalledTimes(1);
   });
 
   it("should fallback to JSON parsing on structured output failure", async () => {
-    // First call fails, second call succeeds with plain JSON
+    // First call (structured output) fails, second call (fallback) succeeds
     const responseJson = createJudgeResponseJson({ quality_score: 7 });
-    let callCount = 0;
-    const createMock = vi.fn().mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) {
-        // First call - simulate structured output failure
-        return Promise.reject(new Error("Structured output not supported"));
-      }
-      // Second call - return plain JSON
-      return Promise.resolve({
-        content: [{ type: "text", text: responseJson }],
-      });
+    const betaCreateMock = vi
+      .fn()
+      .mockRejectedValue(new Error("Structured output not supported"));
+    const messagesCreateMock = vi.fn().mockResolvedValue({
+      content: [{ type: "text", text: responseJson }],
     });
     const mockClient = {
-      messages: { create: createMock },
+      beta: { messages: { create: betaCreateMock } },
+      messages: { create: messagesCreateMock },
     } as unknown as Anthropic;
     const scenario = createScenario();
     const transcript = createTranscript();
@@ -563,25 +582,22 @@ describe("evaluateWithFallback", () => {
     );
 
     expect(result.quality_score).toBe(7);
-    expect(createMock).toHaveBeenCalledTimes(2);
+    expect(betaCreateMock).toHaveBeenCalledTimes(1);
+    expect(messagesCreateMock).toHaveBeenCalledTimes(1);
   });
 
   it("should handle markdown code blocks in fallback response", async () => {
     const responseJson = createJudgeResponseJson({ quality_score: 6 });
     const wrappedResponse = "```json\n" + responseJson + "\n```";
-    let callCount = 0;
+    const betaCreateMock = vi
+      .fn()
+      .mockRejectedValue(new Error("Structured output error"));
+    const messagesCreateMock = vi.fn().mockResolvedValue({
+      content: [{ type: "text", text: wrappedResponse }],
+    });
     const mockClient = {
-      messages: {
-        create: vi.fn().mockImplementation(() => {
-          callCount++;
-          if (callCount === 1) {
-            return Promise.reject(new Error("Structured output error"));
-          }
-          return Promise.resolve({
-            content: [{ type: "text", text: wrappedResponse }],
-          });
-        }),
-      },
+      beta: { messages: { create: betaCreateMock } },
+      messages: { create: messagesCreateMock },
     } as unknown as Anthropic;
     const scenario = createScenario();
     const transcript = createTranscript();
@@ -600,20 +616,16 @@ describe("evaluateWithFallback", () => {
   });
 
   it("should return error response when both methods fail", async () => {
-    let callCount = 0;
+    const betaCreateMock = vi
+      .fn()
+      .mockRejectedValue(new Error("Structured output error"));
+    const messagesCreateMock = vi.fn().mockResolvedValue({
+      // Fallback returns invalid JSON
+      content: [{ type: "text", text: "This is not JSON at all" }],
+    });
     const mockClient = {
-      messages: {
-        create: vi.fn().mockImplementation(() => {
-          callCount++;
-          if (callCount === 1) {
-            return Promise.reject(new Error("Structured output error"));
-          }
-          // Fallback returns invalid JSON
-          return Promise.resolve({
-            content: [{ type: "text", text: "This is not JSON at all" }],
-          });
-        }),
-      },
+      beta: { messages: { create: betaCreateMock } },
+      messages: { create: messagesCreateMock },
     } as unknown as Anthropic;
     const scenario = createScenario();
     const transcript = createTranscript();
