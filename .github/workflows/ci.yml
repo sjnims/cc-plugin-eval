@@ -110,7 +110,7 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm run test:coverage -- --reporter=junit --outputFile.junit=test-report.junit.xml
+        run: npm run test:coverage
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 

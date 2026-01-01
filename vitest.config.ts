@@ -62,10 +62,14 @@ export default defineConfig({
     // =========================================================================
     // Reporter Configuration
     // Verbose output in CI for better debugging, default locally
+    // JUnit reporter in CI for Codecov Test Analytics
     // =========================================================================
-    reporters: process.env.CI ? ["verbose", "html"] : ["default", "html"],
+    reporters: process.env.CI
+      ? ["verbose", "html", "junit"]
+      : ["default", "html"],
     outputFile: {
       html: "./coverage/test-report.html",
+      junit: "./test-report.junit.xml",
     },
 
     // =========================================================================
