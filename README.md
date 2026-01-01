@@ -1,6 +1,7 @@
 # cc-plugin-eval
 
 [![CI](https://github.com/sjnims/cc-plugin-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/sjnims/cc-plugin-eval/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/sjnims/cc-plugin-eval/graph/badge.svg)](https://codecov.io/gh/sjnims/cc-plugin-eval)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
 
