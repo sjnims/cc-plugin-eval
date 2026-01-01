@@ -28,13 +28,11 @@
 
 ### Core Infrastructure
 
-- [ ] CLI (`src/index.ts`)
-- [ ] Pipeline Orchestrator (`src/pipeline.ts`)
+- [ ] CLI & Pipeline Orchestration (`src/index.ts`)
 - [ ] Configuration (`src/config/`)
 - [ ] State Management (`src/state/`)
 - [ ] Types (`src/types/`)
 - [ ] Utilities (`src/utils/`)
-- [ ] Prompts (`src/prompts/`)
 
 ### Other
 
@@ -106,7 +104,7 @@ Fixes # (issue)
 
 - [ ] I have run `npm test` and all tests pass
 - [ ] I have added tests for new functionality
-- [ ] Test coverage remains at or above 80% threshold
+- [ ] Test coverage meets thresholds (78% lines, 75% functions, 65% branches)
 - [ ] I have tested with a sample plugin (if applicable)
 
 ## Stage-Specific Checks
@@ -189,9 +187,11 @@ Fixes # (issue)
 <!-- Information specifically for the reviewer -->
 
 **Areas that need special attention**:
+
 <!-- List any specific areas you'd like reviewers to focus on -->
 
 **Known limitations or trade-offs**:
+
 <!-- Describe any known issues or compromises made -->
 
 ---
@@ -199,7 +199,7 @@ Fixes # (issue)
 ## Pre-Merge Checklist (for maintainers)
 
 - [ ] All CI checks pass
-- [ ] Test coverage threshold maintained (80%)
+- [ ] Test coverage thresholds maintained
 - [ ] No security vulnerabilities introduced
 - [ ] API/SDK compatibility verified
 - [ ] Breaking changes are clearly documented

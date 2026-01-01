@@ -30,7 +30,6 @@
 /src/state/ @sjnims
 /src/utils/ @sjnims
 /src/types/ @sjnims
-/src/prompts/ @sjnims
 
 # CLI entry point
 /src/index.ts @sjnims

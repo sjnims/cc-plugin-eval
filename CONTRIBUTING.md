@@ -32,11 +32,10 @@ src/
 │   └── 4-evaluation/     # Programmatic detection, LLM judge, metrics
 ├── state/                # Resume capability, checkpointing
 ├── types/                # TypeScript interfaces
-├── prompts/              # LLM prompt templates
 └── utils/                # Retry, concurrency, logging utilities
 
 tests/
-├── unit/                 # Unit tests (80% coverage required)
+├── unit/                 # Unit tests mirror src/ structure
 └── integration/          # Integration tests for full stages
 ```
 
@@ -69,7 +68,7 @@ npm run build
 ```bash
 npm test                  # Run all tests
 npm run test:watch        # Watch mode
-npm run test:coverage     # With coverage report (80% threshold)
+npm run test:coverage     # With coverage report
 ```
 
 ## Code Style
@@ -106,7 +105,7 @@ actionlint .github/workflows/*.yml
 
 ## Testing Requirements
 
-- **80% coverage minimum** for branches, functions, lines, and statements
+- **Coverage thresholds**: 78% lines/statements, 75% functions, 65% branches
 - Unit tests for all new functionality
 - Integration tests for stage-level changes
 - Mock external API calls (Anthropic SDK)

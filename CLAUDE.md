@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 cc-plugin-eval is a 4-stage evaluation framework for testing Claude Code plugin component triggering. It evaluates whether skills, agents, commands, hooks, and MCP servers correctly activate when expected.
 
+**Requirements**: Node.js >= 20.0.0, Anthropic API key
+
 ## Build & Development Commands
 
 ```bash
@@ -24,7 +26,7 @@ npm run typecheck      # tsc --noEmit
 # Test
 npm run test           # Run all tests with Vitest
 npm run test:watch     # Watch mode
-npm run test:coverage  # With coverage report (80% threshold)
+npm run test:coverage  # With coverage report
 npm run test:ui        # Vitest UI in browser
 
 # Run a single test file
@@ -101,8 +103,7 @@ src/
 │   └── 4-evaluation/     # Programmatic detection, LLM judge, conflict tracking
 ├── state/                # Resume capability, checkpoint management
 ├── types/                # TypeScript interfaces
-├── prompts/              # LLM prompt templates
-└── utils/                # Retry, concurrency, token estimation
+└── utils/                # Retry, concurrency, logging, file I/O
 ```
 
 ### Detection Strategy
@@ -138,10 +139,10 @@ Main config is `seed.yaml`. Key settings:
 - ESM modules with NodeNext resolution
 - Strict TypeScript (all strict flags enabled, `noUncheckedIndexedAccess`)
 - Explicit return types on all functions
-- Import order: builtin → external → internal → parent → sibling
+- Import order enforced by ESLint: builtin → external → internal → parent → sibling (alphabetized within groups)
 - Prefix unused parameters with `_`
 - Use `type` imports for type-only imports (`import type { Foo }` or `import { type Foo }`)
-- 80% test coverage minimum (enforced by Vitest)
+- Coverage thresholds: 78% lines/statements, 75% functions, 65% branches
 
 ## Key Implementation Details
 
@@ -150,3 +151,49 @@ Main config is `seed.yaml`. Key settings:
 - **Model pricing externalized** in `src/config/pricing.ts` for easy updates
 - **State checkpointing** after each stage enables resume on interruption
 - **Tool capture via PreToolUse hooks** during SDK execution for programmatic detection
+
+## Implementation Patterns
+
+### Custom Error Classes with Cause Chains
+
+```typescript
+// Pattern in src/config/loader.ts
+export class ConfigLoadError extends Error {
+  override readonly cause?: Error | undefined;
+  constructor(message: string, cause?: Error) {
+    super(message);
+    this.name = "ConfigLoadError";
+    this.cause = cause;
+  }
+}
+// Usage: throw new ConfigLoadError("Failed to read config", originalError);
+```
+
+### Type Guards for Tool Detection
+
+```typescript
+// Pattern in src/stages/4-evaluation/programmatic-detector.ts
+function isSkillInput(input: unknown): input is SkillToolInput {
+  return (
+    typeof input === "object" &&
+    input !== null &&
+    "skill" in input &&
+    typeof (input as SkillToolInput).skill === "string"
+  );
+}
+```
+
+### Handler Map for Stage-Based Resume
+
+```typescript
+// Pattern in src/index.ts - polymorphic dispatch based on pipeline stage
+const resumeHandlers: Record<PipelineStage, ResumeHandler> = {
+  pending: resumeFromAnalysis,
+  analysis: resumeFromAnalysis,
+  generation: resumeFromGeneration,
+  execution: resumeFromExecution,
+  evaluation: resumeFromEvaluation,
+  complete: resumeFromEvaluation,
+};
+// State files stored at: results/<plugin-name>/<run-id>/state.json
+```

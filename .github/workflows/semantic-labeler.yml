@@ -72,12 +72,10 @@ jobs:
             - `stage:evaluation` - Stage 4: Programmatic detection and LLM judge
 
             **COMPONENT (choose ALL that apply):**
-            - `component:cli` - CLI entry point
-            - `component:pipeline` - Pipeline orchestrator
+            - `component:cli` - CLI entry point and pipeline orchestration
             - `component:config` - Configuration loading
             - `component:state` - Resume and checkpoint management
-            - `component:utils` - Utilities (retry, concurrency, tokens)
-            - `component:prompts` - LLM prompt templates
+            - `component:utils` - Utilities (retry, concurrency, logging)
             - `component:types` - TypeScript interfaces
             - `github-actions` - CI/CD and GitHub workflows
 
@@ -196,11 +194,9 @@ jobs:
 
             **COMPONENT (choose ALL that apply based on files changed):**
             - `component:cli` - Changes to `src/index.ts`
-            - `component:pipeline` - Changes to `src/pipeline.ts`
             - `component:config` - Changes to `src/config/**`
             - `component:state` - Changes to `src/state/**`
             - `component:utils` - Changes to `src/utils/**`
-            - `component:prompts` - Changes to `src/prompts/**`
             - `component:types` - Changes to `src/types/**`
             - `github-actions` - Changes to `.github/workflows/**`
             - `dependencies` - Changes to `package.json` or `package-lock.json`

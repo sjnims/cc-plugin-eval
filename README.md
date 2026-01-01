@@ -1,5 +1,9 @@
 # cc-plugin-eval
 
+[![CI](https://github.com/sjnims/cc-plugin-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/sjnims/cc-plugin-eval/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
+
 A 4-stage evaluation framework for testing Claude Code plugin component triggering. Validates whether skills, agents, commands, hooks, and MCP servers correctly activate when expected.
 
 ## Why This Exists
@@ -263,7 +267,7 @@ npm run build
 # Run tests
 npm test
 
-# Run tests with coverage (80% threshold)
+# Run tests with coverage
 npm run test:coverage
 
 # Lint
@@ -293,7 +297,6 @@ src/
 │   └── 4-evaluation/     # Detection & metrics
 ├── state/                # Resume capability
 ├── types/                # TypeScript interfaces
-├── prompts/              # LLM prompt templates
 └── utils/                # Retry, concurrency, logging
 ```
 

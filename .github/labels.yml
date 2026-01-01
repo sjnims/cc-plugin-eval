@@ -69,11 +69,7 @@
 
 - name: "component:cli"
   color: "455a64"
-  description: "CLI entry point (src/index.ts)"
-
-- name: "component:pipeline"
-  color: "5c6bc0"
-  description: "Pipeline orchestrator (src/pipeline.ts)"
+  description: "CLI entry point and pipeline orchestration (src/index.ts)"
 
 - name: "component:config"
   color: "8d6e63"
@@ -85,11 +81,7 @@
 
 - name: "component:utils"
   color: "90a4ae"
-  description: "Utilities: retry, concurrency, tokens (src/utils/)"
-
-- name: "component:prompts"
-  color: "b0bec5"
-  description: "LLM prompt templates (src/prompts/)"
+  description: "Utilities: retry, concurrency, logging (src/utils/)"
 
 - name: "component:types"
   color: "cfd8dc"
