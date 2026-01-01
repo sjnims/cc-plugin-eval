@@ -4,7 +4,7 @@ name: Check Links
 # Key flags:
 #   --cache: Cache results to speed up subsequent runs
 #   --exclude-link-local: Skip localhost/127.0.0.1 links (not reachable in CI)
-#   --exclude-file: Use .lycheeignore for links that shouldn't be checked
+# .lycheeignore is auto-detected for URL patterns to exclude
 # Creates a GitHub issue on failure for visibility
 
 on:
@@ -48,7 +48,6 @@ jobs:
             --verbose
             --no-progress
             --exclude-link-local
-            --exclude-file .lycheeignore
             '**/*.md'
           fail: true
         env:
