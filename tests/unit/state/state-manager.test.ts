@@ -81,7 +81,7 @@ describe("generateRunId", () => {
         now.getFullYear(),
         String(now.getMonth() + 1).padStart(2, "0"),
         String(now.getDate()).padStart(2, "0"),
-      ].join("")
+      ].join(""),
     );
   });
 });
@@ -188,7 +188,7 @@ describe("loadState", () => {
     const result = loadState("test-plugin", "test-run-123");
 
     expect(readJson).toHaveBeenCalledWith(
-      "results/test-plugin/test-run-123/state.json"
+      "results/test-plugin/test-run-123/state.json",
     );
     expect(result).toEqual(mockState);
   });
@@ -480,7 +480,9 @@ describe("canResumeFrom", () => {
 
   it("returns true for complete only if already complete", () => {
     expect(canResumeFrom(baseState, "complete")).toBe(true);
-    expect(canResumeFrom({ ...baseState, stage: "execution" }, "complete")).toBe(false);
+    expect(
+      canResumeFrom({ ...baseState, stage: "execution" }, "complete"),
+    ).toBe(false);
   });
 });
 
@@ -522,9 +524,30 @@ describe("getFailedScenarios", () => {
     };
 
     const allScenarios: TestScenario[] = [
-      { id: "scenario-1", prompt: "test", expected_component: "a", component_type: "skill", scenario_type: "direct", expected_trigger: true },
-      { id: "scenario-2", prompt: "test", expected_component: "b", component_type: "skill", scenario_type: "direct", expected_trigger: true },
-      { id: "scenario-3", prompt: "test", expected_component: "c", component_type: "skill", scenario_type: "direct", expected_trigger: true },
+      {
+        id: "scenario-1",
+        prompt: "test",
+        expected_component: "a",
+        component_type: "skill",
+        scenario_type: "direct",
+        expected_trigger: true,
+      },
+      {
+        id: "scenario-2",
+        prompt: "test",
+        expected_component: "b",
+        component_type: "skill",
+        scenario_type: "direct",
+        expected_trigger: true,
+      },
+      {
+        id: "scenario-3",
+        prompt: "test",
+        expected_component: "c",
+        component_type: "skill",
+        scenario_type: "direct",
+        expected_trigger: true,
+      },
     ];
 
     const result = getFailedScenarios(state, allScenarios);
@@ -543,7 +566,14 @@ describe("getFailedScenarios", () => {
     };
 
     const allScenarios: TestScenario[] = [
-      { id: "scenario-1", prompt: "test", expected_component: "a", component_type: "skill", scenario_type: "direct", expected_trigger: true },
+      {
+        id: "scenario-1",
+        prompt: "test",
+        expected_component: "a",
+        component_type: "skill",
+        scenario_type: "direct",
+        expected_trigger: true,
+      },
     ];
 
     expect(getFailedScenarios(state, allScenarios)).toEqual([]);
@@ -573,8 +603,22 @@ describe("getIncompleteScenarios", () => {
     };
 
     const allScenarios: TestScenario[] = [
-      { id: "scenario-1", prompt: "test", expected_component: "a", component_type: "skill", scenario_type: "direct", expected_trigger: true },
-      { id: "scenario-2", prompt: "test", expected_component: "b", component_type: "skill", scenario_type: "direct", expected_trigger: true },
+      {
+        id: "scenario-1",
+        prompt: "test",
+        expected_component: "a",
+        component_type: "skill",
+        scenario_type: "direct",
+        expected_trigger: true,
+      },
+      {
+        id: "scenario-2",
+        prompt: "test",
+        expected_component: "b",
+        component_type: "skill",
+        scenario_type: "direct",
+        expected_trigger: true,
+      },
     ];
 
     const result = getIncompleteScenarios(state, allScenarios);
@@ -605,8 +649,22 @@ describe("getIncompleteScenarios", () => {
     };
 
     const allScenarios: TestScenario[] = [
-      { id: "scenario-1", prompt: "test", expected_component: "a", component_type: "skill", scenario_type: "direct", expected_trigger: true },
-      { id: "scenario-2", prompt: "test", expected_component: "b", component_type: "skill", scenario_type: "direct", expected_trigger: true },
+      {
+        id: "scenario-1",
+        prompt: "test",
+        expected_component: "a",
+        component_type: "skill",
+        scenario_type: "direct",
+        expected_trigger: true,
+      },
+      {
+        id: "scenario-2",
+        prompt: "test",
+        expected_component: "b",
+        component_type: "skill",
+        scenario_type: "direct",
+        expected_trigger: true,
+      },
     ];
 
     const result = getIncompleteScenarios(state, allScenarios);
@@ -664,10 +722,7 @@ describe("formatState", () => {
       stage: "generation",
       timestamp: "2024-01-01T00:00:00.000Z",
       config: { plugin: { path: "/test" } } as EvalConfig,
-      scenarios: [
-        { id: "s1" } as TestScenario,
-        { id: "s2" } as TestScenario,
-      ],
+      scenarios: [{ id: "s1" } as TestScenario, { id: "s2" } as TestScenario],
     };
 
     const result = formatState(state);

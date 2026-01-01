@@ -4,7 +4,10 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { ExecutionResult, TestScenario } from "../../../../src/types/index.js";
+import type {
+  ExecutionResult,
+  TestScenario,
+} from "../../../../src/types/index.js";
 
 import {
   consoleProgress,
@@ -31,7 +34,7 @@ describe("consoleProgress", () => {
 
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining("="));
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining("STAGE: EXECUTION (10 items)")
+      expect.stringContaining("STAGE: EXECUTION (10 items)"),
     );
   });
 
@@ -50,10 +53,10 @@ describe("consoleProgress", () => {
     consoleProgress.onScenarioComplete!(result, 5, 10);
 
     expect(process.stdout.write).toHaveBeenCalledWith(
-      expect.stringContaining("5/10 (50%)")
+      expect.stringContaining("5/10 (50%)"),
     );
     expect(process.stdout.write).toHaveBeenCalledWith(
-      expect.stringContaining("test-scenario-1")
+      expect.stringContaining("test-scenario-1"),
     );
   });
 
@@ -71,14 +74,16 @@ describe("consoleProgress", () => {
 
     consoleProgress.onScenarioComplete!(result, 1, 10);
 
-    expect(process.stdout.write).toHaveBeenCalledWith(expect.stringContaining("❌"));
+    expect(process.stdout.write).toHaveBeenCalledWith(
+      expect.stringContaining("❌"),
+    );
   });
 
   it("logs stage completion", () => {
     consoleProgress.onStageComplete!("execution", 5000, 10);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining("execution complete: 10 items in 5.0s")
+      expect.stringContaining("execution complete: 10 items in 5.0s"),
     );
   });
 
@@ -95,7 +100,7 @@ describe("consoleProgress", () => {
     consoleProgress.onError!(new Error("Test error"), scenario);
 
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining("Error in test-scenario: Test error")
+      expect.stringContaining("Error in test-scenario: Test error"),
     );
   });
 
@@ -103,7 +108,7 @@ describe("consoleProgress", () => {
     consoleProgress.onError!(new Error("Test error"), undefined);
 
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining("Error: Test error")
+      expect.stringContaining("Error: Test error"),
     );
   });
 });
@@ -132,13 +137,13 @@ describe("verboseProgress", () => {
     verboseProgress.onScenarioStart!(scenario, 0, 10);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining("[1/10] Starting: test-scenario")
+      expect.stringContaining("[1/10] Starting: test-scenario"),
     );
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining("Type: skill")
+      expect.stringContaining("Type: skill"),
     );
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining("Prompt:")
+      expect.stringContaining("Prompt:"),
     );
   });
 
@@ -156,7 +161,7 @@ describe("verboseProgress", () => {
     verboseProgress.onScenarioStart!(scenario, 0, 10);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringMatching(/Prompt:.*\.\.\./)
+      expect.stringMatching(/Prompt:.*\.\.\./),
     );
   });
 
@@ -174,14 +179,12 @@ describe("verboseProgress", () => {
 
     verboseProgress.onScenarioComplete!(result, 1, 10);
 
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining("PASSED"));
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining("PASSED")
+      expect.stringContaining("Cost: $0.0123"),
     );
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining("Cost: $0.0123")
-    );
-    expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining("Detected: Skill")
+      expect.stringContaining("Detected: Skill"),
     );
   });
 
@@ -199,9 +202,7 @@ describe("verboseProgress", () => {
 
     verboseProgress.onScenarioComplete!(result, 1, 10);
 
-    expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining("FAILED")
-    );
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining("FAILED"));
   });
 
   it("shows permission denials", () => {
@@ -219,7 +220,7 @@ describe("verboseProgress", () => {
     verboseProgress.onScenarioComplete!(result, 1, 10);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining("Denials: Write, Bash")
+      expect.stringContaining("Denials: Write, Bash"),
     );
   });
 });

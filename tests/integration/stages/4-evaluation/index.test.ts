@@ -208,7 +208,9 @@ describe("Stage 4: Evaluation Integration", () => {
       const unique = getUniqueDetections(detections);
 
       expect(unique).toHaveLength(2);
-      expect(unique.map((d) => d.component_name)).toContain("skill-development");
+      expect(unique.map((d) => d.component_name)).toContain(
+        "skill-development",
+      );
       expect(unique.map((d) => d.component_name)).toContain(
         "command-development",
       );
@@ -398,7 +400,11 @@ describe("Stage 4: Evaluation Integration", () => {
             summary: "Skill triggered correctly",
             detection_source: "programmatic" as const,
             all_triggered_components: [
-              { component_type: "skill", component_name: "test-skill", confidence: 100 },
+              {
+                component_type: "skill",
+                component_name: "test-skill",
+                confidence: 100,
+              },
             ],
             has_conflict: false,
             conflict_severity: "none" as const,
@@ -424,7 +430,11 @@ describe("Stage 4: Evaluation Integration", () => {
             summary: "Agent triggered correctly",
             detection_source: "programmatic" as const,
             all_triggered_components: [
-              { component_type: "agent", component_name: "test-agent", confidence: 100 },
+              {
+                component_type: "agent",
+                component_name: "test-agent",
+                confidence: 100,
+              },
             ],
             has_conflict: false,
             conflict_severity: "none" as const,
@@ -509,7 +519,8 @@ describe("Stage 4: Evaluation Integration", () => {
                     response_relevance: 9,
                     trigger_accuracy: "correct",
                     issues: [],
-                    summary: "Component triggered correctly and responded appropriately.",
+                    summary:
+                      "Component triggered correctly and responded appropriately.",
                   }),
                 },
               ],
@@ -675,7 +686,13 @@ describe("Stage 4: Evaluation Integration", () => {
         onError: vi.fn(),
       };
 
-      await runEvaluation("test-plugin", scenarios, executions, config, progress);
+      await runEvaluation(
+        "test-plugin",
+        scenarios,
+        executions,
+        config,
+        progress,
+      );
 
       expect(progress.onStageStart).toHaveBeenCalledWith("evaluation", 1);
       expect(progress.onStageComplete).toHaveBeenCalledWith(
