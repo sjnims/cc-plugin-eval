@@ -73,11 +73,13 @@ interface JudgeStrategy {
 
 /**
  * Result from evaluating a single scenario.
- * Includes both the evaluation result and variance for metrics.
+ * Includes both the evaluation result and variance/consensus for metrics.
  */
 interface ScenarioEvaluationResult {
   result: EvaluationResult;
   variance: number;
+  /** Whether all samples agreed on trigger_accuracy */
+  isUnanimous: boolean;
 }
 
 /**
@@ -229,13 +231,14 @@ async function evaluateScenario(
         aggregated_score: 0,
         score_variance: 0,
         consensus_trigger_accuracy: "incorrect",
+        is_unanimous: true, // Error case has single fallback value
         all_issues: errorResponse.issues,
         representative_response: errorResponse,
       };
     }
   }
 
-  // 5. Build and return evaluation result with variance
+  // 5. Build and return evaluation result with variance and consensus
   const result = buildEvaluationResult(
     scenario,
     triggered,
@@ -245,10 +248,12 @@ async function evaluateScenario(
     detectionSource,
   );
 
-  // Extract variance from judgment (0 for single sample or no judgment)
+  // Extract variance and unanimity from judgment
+  // (defaults: 0 variance for no judgment, true unanimity for single/no sample)
   const variance = judgment?.score_variance ?? 0;
+  const isUnanimous = judgment?.is_unanimous ?? true;
 
-  return { result, variance };
+  return { result, variance, isUnanimous };
 }
 
 /**
@@ -326,11 +331,13 @@ export async function runEvaluation(
 
   progress.onStageStart?.("evaluation", contexts.length);
 
-  // Track sample data for metrics
+  // Track sample data for metrics (including trigger_accuracy consensus)
   const sampleData: {
     scenarioId: string;
     variance: number;
     numSamples: number;
+    /** Whether all samples agreed on trigger_accuracy */
+    hasConsensus: boolean;
   }[] = [];
 
   // Evaluate all scenarios in parallel
@@ -341,7 +348,7 @@ export async function runEvaluation(
     items: contexts,
     concurrency: config.max_concurrent,
     fn: async (context: EvaluationContext, index: number) => {
-      const { result, variance } = await evaluateScenario(
+      const { result, variance, isUnanimous } = await evaluateScenario(
         client,
         context,
         config,
@@ -353,6 +360,7 @@ export async function runEvaluation(
           scenarioId: result.scenario_id,
           variance,
           numSamples: config.evaluation.num_samples,
+          hasConsensus: isUnanimous,
         });
       }
 
@@ -363,7 +371,7 @@ export async function runEvaluation(
         contexts.length,
         `${result.scenario_id}: ${result.triggered ? "triggered" : "not triggered"}`,
       );
-      return { result, variance };
+      return { result, variance, isUnanimous };
     },
     onError: (error: Error, context: EvaluationContext) => {
       progress.onError?.(error, context.scenario);
@@ -399,6 +407,7 @@ export async function runEvaluation(
       scenarioId: string;
       variance: number;
       numSamples: number;
+      hasConsensus: boolean;
     }[];
     flakyScenarios?: string[];
   } = {
@@ -508,6 +517,7 @@ export {
   aggregateScores,
   calculateVariance,
   getMajorityVote,
+  isUnanimousVote,
 } from "./multi-sampler.js";
 
 export {

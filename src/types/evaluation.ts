@@ -79,6 +79,8 @@ export interface MultiSampleResult {
   aggregated_score: number;
   score_variance: number;
   consensus_trigger_accuracy: "correct" | "incorrect" | "partial";
+  /** Whether all samples agreed on trigger_accuracy (unanimous vote) */
+  is_unanimous: boolean;
   all_issues: string[];
   representative_response: JudgeResponse;
 }

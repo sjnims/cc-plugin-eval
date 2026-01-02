@@ -143,6 +143,30 @@ export function getMajorityVote(
 }
 
 /**
+ * Check if all votes are unanimous (all samples agree on trigger_accuracy).
+ *
+ * @param votes - Array of trigger accuracy values
+ * @returns True if all votes are the same
+ *
+ * @example
+ * ```typescript
+ * isUnanimousVote(['correct', 'correct', 'correct']) // true
+ * isUnanimousVote(['correct', 'incorrect', 'correct']) // false
+ * isUnanimousVote([]) // true (vacuously true)
+ * isUnanimousVote(['correct']) // true
+ * ```
+ */
+export function isUnanimousVote(
+  votes: ("correct" | "incorrect" | "partial")[],
+): boolean {
+  if (votes.length <= 1) {
+    return true;
+  }
+  const first = votes[0];
+  return votes.every((v) => v === first);
+}
+
+/**
  * Evaluate with multi-sampling for statistical robustness.
  *
  * Runs the judge N times and aggregates results.
@@ -205,6 +229,7 @@ export async function evaluateWithMultiSampling(
   // Consensus on trigger accuracy (majority vote)
   const accuracyVotes = responses.map((r) => r.trigger_accuracy);
   const consensus = getMajorityVote(accuracyVotes);
+  const isUnanimous = isUnanimousVote(accuracyVotes);
 
   // Collect all unique issues
   const allIssues = [...new Set(responses.flatMap((r) => r.issues))];
@@ -230,6 +255,7 @@ export async function evaluateWithMultiSampling(
     aggregated_score: aggregatedQuality,
     score_variance: variance,
     consensus_trigger_accuracy: consensus,
+    is_unanimous: isUnanimous,
     all_issues: allIssues,
     representative_response: representative,
   };
@@ -311,6 +337,7 @@ export async function evaluateSingleSample(
     aggregated_score: response.quality_score,
     score_variance: 0,
     consensus_trigger_accuracy: response.trigger_accuracy,
+    is_unanimous: true, // Single sample is trivially unanimous
     all_issues: response.issues,
     representative_response: response,
   };

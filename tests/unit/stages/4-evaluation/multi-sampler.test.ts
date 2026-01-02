@@ -19,6 +19,7 @@ import {
   calculateVariance,
   calculateStdDev,
   getMajorityVote,
+  isUnanimousVote,
   isLowVariance,
   getConfidenceLevel,
   evaluateSingleSample,
@@ -159,6 +160,38 @@ describe("getMajorityVote", () => {
 
   it("should return incorrect for empty array", () => {
     expect(getMajorityVote([])).toBe("incorrect");
+  });
+});
+
+describe("isUnanimousVote", () => {
+  it("should return true when all votes are the same", () => {
+    expect(isUnanimousVote(["correct", "correct", "correct"])).toBe(true);
+    expect(isUnanimousVote(["incorrect", "incorrect"])).toBe(true);
+    expect(isUnanimousVote(["partial", "partial", "partial"])).toBe(true);
+  });
+
+  it("should return false when votes differ", () => {
+    expect(isUnanimousVote(["correct", "incorrect", "correct"])).toBe(false);
+    expect(isUnanimousVote(["correct", "partial"])).toBe(false);
+    expect(isUnanimousVote(["incorrect", "partial", "correct"])).toBe(false);
+  });
+
+  it("should return true for single vote", () => {
+    expect(isUnanimousVote(["correct"])).toBe(true);
+    expect(isUnanimousVote(["incorrect"])).toBe(true);
+    expect(isUnanimousVote(["partial"])).toBe(true);
+  });
+
+  it("should return true for empty array (vacuously true)", () => {
+    expect(isUnanimousVote([])).toBe(true);
+  });
+
+  it("should handle two votes that differ", () => {
+    expect(isUnanimousVote(["correct", "incorrect"])).toBe(false);
+  });
+
+  it("should handle two votes that agree", () => {
+    expect(isUnanimousVote(["correct", "correct"])).toBe(true);
   });
 });
 
@@ -430,6 +463,21 @@ describe("evaluateSingleSample", () => {
       config,
     );
   });
+
+  it("should always set is_unanimous to true (single sample is trivially unanimous)", async () => {
+    const mockResponse = createJudgeResponse({ trigger_accuracy: "correct" });
+    (evaluateWithFallback as Mock).mockResolvedValue(mockResponse);
+
+    const result = await evaluateSingleSample(
+      createMockClient(),
+      createScenario(),
+      createTranscript(),
+      createDetections(),
+      createConfig(),
+    );
+
+    expect(result.is_unanimous).toBe(true);
+  });
 });
 
 describe("evaluateWithMultiSampling", () => {
@@ -528,6 +576,57 @@ describe("evaluateWithMultiSampling", () => {
       config,
     );
 
+    expect(result.consensus_trigger_accuracy).toBe("correct");
+  });
+
+  it("should set is_unanimous to true when all samples agree on trigger_accuracy", async () => {
+    const responses = [
+      createJudgeResponse({ trigger_accuracy: "correct" }),
+      createJudgeResponse({ trigger_accuracy: "correct" }),
+      createJudgeResponse({ trigger_accuracy: "correct" }),
+    ];
+    let callIndex = 0;
+    (evaluateWithFallback as Mock).mockImplementation(() => {
+      return Promise.resolve(responses[callIndex++]);
+    });
+
+    const config = createConfig({ num_samples: 3 });
+
+    const result = await evaluateWithMultiSampling(
+      createMockClient(),
+      createScenario(),
+      createTranscript(),
+      createDetections(),
+      config,
+    );
+
+    expect(result.is_unanimous).toBe(true);
+    expect(result.consensus_trigger_accuracy).toBe("correct");
+  });
+
+  it("should set is_unanimous to false when samples disagree on trigger_accuracy", async () => {
+    const responses = [
+      createJudgeResponse({ trigger_accuracy: "correct" }),
+      createJudgeResponse({ trigger_accuracy: "correct" }),
+      createJudgeResponse({ trigger_accuracy: "incorrect" }),
+    ];
+    let callIndex = 0;
+    (evaluateWithFallback as Mock).mockImplementation(() => {
+      return Promise.resolve(responses[callIndex++]);
+    });
+
+    const config = createConfig({ num_samples: 3 });
+
+    const result = await evaluateWithMultiSampling(
+      createMockClient(),
+      createScenario(),
+      createTranscript(),
+      createDetections(),
+      config,
+    );
+
+    expect(result.is_unanimous).toBe(false);
+    // Majority vote should still work
     expect(result.consensus_trigger_accuracy).toBe("correct");
   });
 

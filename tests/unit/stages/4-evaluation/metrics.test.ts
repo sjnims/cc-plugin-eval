@@ -17,6 +17,7 @@ import {
   countFalsePositives,
   countFalseNegatives,
   calculateComponentMetrics,
+  calculateMultiSampleStats,
   calculateEvalMetrics,
   formatMetrics,
   createEmptyMetrics,
@@ -322,6 +323,89 @@ describe("calculateComponentMetrics", () => {
     expect(metrics["skill-b"]).toBeDefined();
     expect(metrics["skill-b"]?.scenarios_count).toBe(1);
     expect(metrics["skill-b"]?.trigger_rate).toBe(0);
+  });
+});
+
+describe("calculateMultiSampleStats", () => {
+  it("should return undefined for empty sampleData", () => {
+    expect(calculateMultiSampleStats([])).toBeUndefined();
+  });
+
+  it("should return undefined when num_samples is 1", () => {
+    const sampleData = [
+      { scenarioId: "s1", variance: 0, numSamples: 1, hasConsensus: true },
+    ];
+    expect(calculateMultiSampleStats(sampleData)).toBeUndefined();
+  });
+
+  it("should calculate consensus_rate from hasConsensus field", () => {
+    const sampleData = [
+      { scenarioId: "s1", variance: 0.5, numSamples: 3, hasConsensus: true },
+      { scenarioId: "s2", variance: 0.3, numSamples: 3, hasConsensus: true },
+      { scenarioId: "s3", variance: 0.8, numSamples: 3, hasConsensus: false },
+      { scenarioId: "s4", variance: 0.2, numSamples: 3, hasConsensus: true },
+    ];
+
+    const stats = calculateMultiSampleStats(sampleData);
+
+    expect(stats).toBeDefined();
+    // 3 out of 4 have consensus
+    expect(stats?.consensus_rate).toBe(0.75);
+  });
+
+  it("should track high variance scenarios independently of consensus", () => {
+    const sampleData = [
+      // Low variance, has consensus
+      { scenarioId: "s1", variance: 0.5, numSamples: 3, hasConsensus: true },
+      // High variance (> 1.0), has consensus - this is the key test case
+      // Low quality score variance but unanimous trigger_accuracy
+      { scenarioId: "s2", variance: 1.5, numSamples: 3, hasConsensus: true },
+      // Low variance, no consensus - another key test case
+      // Similar quality scores but disagreement on trigger_accuracy
+      { scenarioId: "s3", variance: 0.3, numSamples: 3, hasConsensus: false },
+    ];
+
+    const stats = calculateMultiSampleStats(sampleData);
+
+    expect(stats).toBeDefined();
+    // High variance only for s2
+    expect(stats?.high_variance_scenarios).toEqual(["s2"]);
+    // Consensus for s1 and s2 (2 out of 3)
+    expect(stats?.consensus_rate).toBeCloseTo(2 / 3);
+  });
+
+  it("should calculate average variance correctly", () => {
+    const sampleData = [
+      { scenarioId: "s1", variance: 1.0, numSamples: 3, hasConsensus: true },
+      { scenarioId: "s2", variance: 2.0, numSamples: 3, hasConsensus: true },
+      { scenarioId: "s3", variance: 3.0, numSamples: 3, hasConsensus: false },
+    ];
+
+    const stats = calculateMultiSampleStats(sampleData);
+
+    expect(stats?.avg_score_variance).toBe(2.0);
+  });
+
+  it("should return 100% consensus rate when all scenarios are unanimous", () => {
+    const sampleData = [
+      { scenarioId: "s1", variance: 0.5, numSamples: 3, hasConsensus: true },
+      { scenarioId: "s2", variance: 0.3, numSamples: 3, hasConsensus: true },
+    ];
+
+    const stats = calculateMultiSampleStats(sampleData);
+
+    expect(stats?.consensus_rate).toBe(1.0);
+  });
+
+  it("should return 0% consensus rate when no scenarios are unanimous", () => {
+    const sampleData = [
+      { scenarioId: "s1", variance: 0.5, numSamples: 3, hasConsensus: false },
+      { scenarioId: "s2", variance: 0.3, numSamples: 3, hasConsensus: false },
+    ];
+
+    const stats = calculateMultiSampleStats(sampleData);
+
+    expect(stats?.consensus_rate).toBe(0);
   });
 });
 

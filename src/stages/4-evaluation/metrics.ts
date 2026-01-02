@@ -176,7 +176,7 @@ export function countErrorsByType(
 /**
  * Calculate multi-sampling statistics.
  *
- * @param sampleData - Per-scenario sample data
+ * @param sampleData - Per-scenario sample data including consensus info
  * @returns Multi-sample statistics or undefined if no sampling
  */
 export function calculateMultiSampleStats(
@@ -184,6 +184,8 @@ export function calculateMultiSampleStats(
     scenarioId: string;
     variance: number;
     numSamples: number;
+    /** Whether all samples agreed on trigger_accuracy */
+    hasConsensus: boolean;
   }[],
 ): MultiSampleStats | undefined {
   if (sampleData.length === 0 || sampleData[0]?.numSamples === 1) {
@@ -200,9 +202,9 @@ export function calculateMultiSampleStats(
     .filter((s) => s.variance > highVarianceThreshold)
     .map((s) => s.scenarioId);
 
-  // Consensus rate (scenarios where all samples agreed on trigger_accuracy)
-  // This would need to be calculated during evaluation, using placeholder
-  const consensusRate = 1 - highVarianceScenarios.length / sampleData.length;
+  // Consensus rate: % of scenarios where all samples agreed on trigger_accuracy
+  const consensusCount = sampleData.filter((s) => s.hasConsensus).length;
+  const consensusRate = consensusCount / sampleData.length;
 
   return {
     samples_per_scenario: samplesPerScenario,
@@ -321,6 +323,8 @@ export function calculateEvalMetrics(
       scenarioId: string;
       variance: number;
       numSamples: number;
+      /** Whether all samples agreed on trigger_accuracy */
+      hasConsensus: boolean;
     }[];
     flakyScenarios?: string[];
   } = {},

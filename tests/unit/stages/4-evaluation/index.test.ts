@@ -206,6 +206,7 @@ function createMultiSampleResult(
     aggregated_score: 8,
     score_variance: 0,
     consensus_trigger_accuracy: "correct",
+    is_unanimous: true,
     all_issues: [],
     representative_response: {
       quality_score: 8,
@@ -1069,6 +1070,120 @@ describe("runEvaluation", () => {
       );
 
       expect(output.metrics.multi_sample_stats).toBeUndefined();
+    });
+
+    it("should calculate consensus_rate from actual trigger_accuracy agreement", async () => {
+      // Scenario 1: unanimous (all agree on trigger_accuracy)
+      // Scenario 2: not unanimous (samples disagree on trigger_accuracy)
+      let callCount = 0;
+      (runJudgment as Mock).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(
+            createMultiSampleResult({
+              individual_scores: [7, 8, 8],
+              aggregated_score: 7.67,
+              score_variance: 0.22,
+              is_unanimous: true, // All samples agreed
+            }),
+          );
+        }
+        return Promise.resolve(
+          createMultiSampleResult({
+            individual_scores: [7, 8, 9],
+            aggregated_score: 8,
+            score_variance: 0.67,
+            is_unanimous: false, // Samples disagreed
+          }),
+        );
+      });
+
+      const scenarios = [
+        createScenario({ id: "s1" }),
+        createScenario({ id: "s2" }),
+      ];
+      const executions = [
+        createExecutionResult({ scenario_id: "s1" }),
+        createExecutionResult({ scenario_id: "s2" }),
+      ];
+      const config = createConfig({
+        evaluation: {
+          ...createConfig().evaluation,
+          num_samples: 3,
+        },
+      });
+
+      const output = await runEvaluation(
+        "test-plugin",
+        scenarios,
+        executions,
+        config,
+      );
+
+      expect(output.metrics.multi_sample_stats).toBeDefined();
+      // 1 out of 2 scenarios had unanimous trigger_accuracy agreement
+      expect(output.metrics.multi_sample_stats?.consensus_rate).toBe(0.5);
+    });
+
+    it("should correctly differentiate consensus from variance", async () => {
+      // This test verifies that consensus is independent of variance:
+      // - Low variance but no consensus (similar scores, disagreement on accuracy)
+      // - High variance but has consensus (different scores, agreement on accuracy)
+      let callCount = 0;
+      (runJudgment as Mock).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          // Low variance, but no consensus on trigger_accuracy
+          return Promise.resolve(
+            createMultiSampleResult({
+              individual_scores: [8, 8, 8],
+              score_variance: 0, // Zero variance
+              is_unanimous: false, // But samples disagreed on trigger_accuracy
+            }),
+          );
+        }
+        // High variance, but unanimous on trigger_accuracy
+        return Promise.resolve(
+          createMultiSampleResult({
+            individual_scores: [3, 8, 10],
+            score_variance: 8.67, // High variance
+            is_unanimous: true, // But all samples agreed on trigger_accuracy
+          }),
+        );
+      });
+
+      const scenarios = [
+        createScenario({ id: "s1" }),
+        createScenario({ id: "s2" }),
+      ];
+      const executions = [
+        createExecutionResult({ scenario_id: "s1" }),
+        createExecutionResult({ scenario_id: "s2" }),
+      ];
+      const config = createConfig({
+        evaluation: {
+          ...createConfig().evaluation,
+          num_samples: 3,
+        },
+      });
+
+      const output = await runEvaluation(
+        "test-plugin",
+        scenarios,
+        executions,
+        config,
+      );
+
+      expect(output.metrics.multi_sample_stats).toBeDefined();
+      // s2 has high variance (> 1.0)
+      expect(
+        output.metrics.multi_sample_stats?.high_variance_scenarios,
+      ).toContain("s2");
+      expect(
+        output.metrics.multi_sample_stats?.high_variance_scenarios,
+      ).not.toContain("s1");
+      // s2 has consensus, s1 does not - 50% consensus rate
+      expect(output.metrics.multi_sample_stats?.consensus_rate).toBe(0.5);
     });
   });
 });
