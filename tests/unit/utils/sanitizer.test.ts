@@ -358,4 +358,22 @@ describe("sanitizeTranscriptEvent", () => {
     const result = sanitizeTranscriptEvent(event);
     expect(result.edit.message.content).toBe("");
   });
+
+  it("handles unknown event types gracefully", () => {
+    // Create an event with a type that doesn't match user/assistant/tool_result
+    const unknownEvent = {
+      id: "unknown_1",
+      type: "system" as const,
+      data: { message: "System notification" },
+    };
+
+    // Cast to TranscriptEvent to test the fallback path
+    const result = sanitizeTranscriptEvent(
+      unknownEvent as unknown as Parameters<typeof sanitizeTranscriptEvent>[0],
+    );
+
+    // Should return a shallow copy unchanged
+    expect(result).toEqual(unknownEvent);
+    expect(result).not.toBe(unknownEvent); // Verify it's a new object
+  });
 });

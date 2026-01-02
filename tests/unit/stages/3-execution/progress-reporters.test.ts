@@ -16,6 +16,7 @@ import {
   jsonProgress,
   createProgressReporter,
   createStreamingReporter,
+  createSanitizedVerboseProgress,
 } from "../../../../src/stages/3-execution/progress-reporters.js";
 
 describe("consoleProgress", () => {
@@ -473,5 +474,201 @@ describe("createStreamingReporter", () => {
       type: "error",
       data: { scenario_id: undefined, error: "Test error" },
     });
+  });
+});
+
+describe("createSanitizedVerboseProgress", () => {
+  let logSpy: ReturnType<typeof vi.spyOn>;
+  let errorSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    logSpy = vi.spyOn(console, "log").mockImplementation(vi.fn());
+    errorSpy = vi.spyOn(console, "error").mockImplementation(vi.fn());
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("returns object with all ProgressCallbacks functions", () => {
+    const callbacks = createSanitizedVerboseProgress();
+
+    expect(callbacks.onStageStart).toBeTypeOf("function");
+    expect(callbacks.onStageComplete).toBeTypeOf("function");
+    expect(callbacks.onError).toBeTypeOf("function");
+    expect(callbacks.onScenarioStart).toBeTypeOf("function");
+    expect(callbacks.onScenarioComplete).toBeTypeOf("function");
+  });
+
+  it("works without config (sanitization disabled)", () => {
+    const callbacks = createSanitizedVerboseProgress();
+
+    const scenario: TestScenario = {
+      id: "test-scenario",
+      prompt: "test",
+      user_prompt: "Contact user@example.com for help",
+      expected_component: "skill-a",
+      component_type: "skill",
+      scenario_type: "direct",
+      expected_trigger: true,
+    };
+
+    callbacks.onScenarioStart!(scenario, 0, 1);
+
+    // Without sanitization, email should appear as-is
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining("user@example.com"),
+    );
+  });
+
+  it("applies sanitization when sanitize_logs is enabled", () => {
+    const callbacks = createSanitizedVerboseProgress({
+      format: "json",
+      include_cli_summary: true,
+      junit_test_suite_name: "test",
+      sanitize_transcripts: false,
+      sanitize_logs: true,
+    });
+
+    const scenario: TestScenario = {
+      id: "test-scenario",
+      prompt: "test",
+      user_prompt: "Contact user@example.com for help",
+      expected_component: "skill-a",
+      component_type: "skill",
+      scenario_type: "direct",
+      expected_trigger: true,
+    };
+
+    callbacks.onScenarioStart!(scenario, 0, 1);
+
+    // With sanitization, email should be redacted
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[REDACTED_EMAIL]"),
+    );
+    expect(logSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining("user@example.com"),
+    );
+  });
+
+  it("sanitizes permission denials", () => {
+    const callbacks = createSanitizedVerboseProgress({
+      format: "json",
+      include_cli_summary: true,
+      junit_test_suite_name: "test",
+      sanitize_transcripts: false,
+      sanitize_logs: true,
+    });
+
+    const result: ExecutionResult = {
+      scenario_id: "test-scenario",
+      transcript: { metadata: { version: "v3.0" }, events: [] },
+      detected_tools: [],
+      cost_usd: 0.01,
+      api_duration_ms: 100,
+      num_turns: 1,
+      permission_denials: ["Denied access for user@test.com"],
+      errors: [],
+    };
+
+    callbacks.onScenarioComplete!(result, 1, 10);
+
+    // Permission denial should have email redacted
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[REDACTED_EMAIL]"),
+    );
+  });
+
+  it("uses custom patterns when provided", () => {
+    const callbacks = createSanitizedVerboseProgress({
+      format: "json",
+      include_cli_summary: true,
+      junit_test_suite_name: "test",
+      sanitize_transcripts: false,
+      sanitize_logs: true,
+      sanitization: {
+        enabled: true,
+        custom_patterns: [
+          { pattern: "SECRET-\\w+", replacement: "[CUSTOM_REDACTED]" },
+        ],
+      },
+    });
+
+    const scenario: TestScenario = {
+      id: "test-scenario",
+      prompt: "test",
+      user_prompt: "The code is SECRET-abc123",
+      expected_component: "skill-a",
+      component_type: "skill",
+      scenario_type: "direct",
+      expected_trigger: true,
+    };
+
+    callbacks.onScenarioStart!(scenario, 0, 1);
+
+    // Custom pattern should be applied
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[CUSTOM_REDACTED]"),
+    );
+  });
+
+  it("logs stage start correctly", () => {
+    const callbacks = createSanitizedVerboseProgress();
+
+    callbacks.onStageStart!("execution", 10);
+
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("="));
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining("STAGE: EXECUTION"),
+    );
+  });
+
+  it("logs stage completion correctly", () => {
+    const callbacks = createSanitizedVerboseProgress();
+
+    callbacks.onStageComplete!("execution", 5000, 10);
+
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining("execution complete"),
+    );
+  });
+
+  it("logs errors correctly", () => {
+    const callbacks = createSanitizedVerboseProgress();
+
+    const scenario: TestScenario = {
+      id: "test-scenario",
+      prompt: "test",
+      expected_component: "skill-a",
+      component_type: "skill",
+      scenario_type: "direct",
+      expected_trigger: true,
+    };
+
+    callbacks.onError!(new Error("Test error"), scenario);
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Error in test-scenario"),
+    );
+  });
+
+  it("logs scenario completion with detected tools", () => {
+    const callbacks = createSanitizedVerboseProgress();
+
+    const result: ExecutionResult = {
+      scenario_id: "test-scenario",
+      transcript: { metadata: { version: "v3.0" }, events: [] },
+      detected_tools: [{ name: "Skill", input: { skill: "test" } }],
+      cost_usd: 0.0123,
+      api_duration_ms: 456,
+      num_turns: 2,
+      permission_denials: [],
+      errors: [],
+    };
+
+    callbacks.onScenarioComplete!(result, 1, 10);
+
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("PASSED"));
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Detected:"));
   });
 });
