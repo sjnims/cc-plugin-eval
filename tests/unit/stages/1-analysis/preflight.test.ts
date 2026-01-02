@@ -2,7 +2,24 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+// Flag to control mocked lstatSync behavior
+let mockLstatSyncError = false;
+
+// Mock node:fs at module level to intercept direct ESM imports
+vi.mock("node:fs", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs")>();
+  return {
+    ...actual,
+    lstatSync: vi.fn((filePath: string) => {
+      if (mockLstatSyncError) {
+        throw new Error("Permission denied");
+      }
+      return actual.lstatSync(filePath);
+    }),
+  };
+});
 
 import {
   formatPreflightResult,
@@ -89,15 +106,25 @@ describe("preflightCheck symlink handling", () => {
   beforeEach(() => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "preflight-symlink-test-"));
     symlinkPath = path.join(tempDir, "symlink-plugin");
+    mockLstatSyncError = false; // Reset mock flag
   });
 
   afterEach(() => {
-    // Clean up symlink and temp dir
-    if (fs.existsSync(symlinkPath)) {
-      fs.unlinkSync(symlinkPath);
+    mockLstatSyncError = false; // Reset mock flag
+    // Clean up symlink and temp dir - use try-catch to prevent cleanup failures
+    try {
+      if (fs.existsSync(symlinkPath)) {
+        fs.unlinkSync(symlinkPath);
+      }
+    } catch {
+      // Ignore cleanup errors
     }
-    if (fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true });
+    try {
+      if (fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      }
+    } catch {
+      // Ignore cleanup errors
     }
   });
 
@@ -153,5 +180,17 @@ describe("preflightCheck symlink handling", () => {
       (w) => w.code === "SYMLINK_RESOLVED",
     );
     expect(symlinkWarning).toBeUndefined();
+  });
+
+  it("handles lstatSync failure with PATH_RESOLUTION_FAILED", () => {
+    const validPath = path.join(fixturesPath, "valid-plugin");
+    mockLstatSyncError = true; // Enable error throwing
+
+    const result = preflightCheck(validPath);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]?.code).toBe("PATH_RESOLUTION_FAILED");
+    expect(result.errors[0]?.message).toContain("Permission denied");
   });
 });
