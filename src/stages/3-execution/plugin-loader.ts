@@ -6,6 +6,8 @@
  * that the plugin and its components are available.
  */
 
+import { DEFAULT_TUNING } from "../../config/defaults.js";
+
 import {
   executeQuery,
   isSystemMessage,
@@ -39,7 +41,8 @@ const ERROR_RECOVERY_HINTS: Record<string, string> = {
   mcp_connection_failed: "Check MCP server command/path and dependencies",
   mcp_auth_required: "Configure OAuth or set skip_auth_required: true",
   mcp_timeout: "Increase mcp_servers.connection_timeout_ms in config",
-  timeout: "Plugin load exceeded 30 seconds. Check for slow MCP servers",
+  timeout:
+    "Plugin load exceeded timeout. Check for slow MCP servers or increase tuning.timeouts.plugin_load_ms",
   permission_denied: "Check file permissions for plugin directory",
   unknown: "Check logs for detailed error information",
 };
@@ -104,7 +107,12 @@ export interface PluginLoaderOptions {
 export async function verifyPluginLoad(
   options: PluginLoaderOptions,
 ): Promise<PluginLoadResult> {
-  const { pluginPath, config, queryFn, timeoutMs = 30000 } = options;
+  const {
+    pluginPath,
+    config,
+    queryFn,
+    timeoutMs = DEFAULT_TUNING.timeouts.plugin_load_ms,
+  } = options;
   const startTime = Date.now();
 
   // Create abort controller for timeout
@@ -159,7 +167,7 @@ export async function verifyPluginLoad(
     const isTimeout = err instanceof Error && err.name === "AbortError";
     const errorType: PluginErrorType = isTimeout ? "timeout" : "unknown";
     const errorMessage = isTimeout
-      ? "Plugin load timed out after 30 seconds"
+      ? `Plugin load timed out after ${String(timeoutMs / 1000)} seconds`
       : `Plugin load failed: ${err instanceof Error ? err.message : String(err)}`;
 
     return createFailedResult(pluginPath, errorMessage, errorType, startTime);

@@ -6,6 +6,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 
+import { DEFAULT_TUNING, getResolvedTuning } from "../../config/defaults.js";
 import { calculateCost, formatCost } from "../../config/pricing.js";
 
 import { TOKENS_PER_SCENARIO } from "./batch-calculator.js";
@@ -101,8 +102,9 @@ export async function estimateGenerationCost(
     totalInputTokens += count;
   }
 
-  // Estimate output based on ~800 tokens per scenario average
-  const estimatedOutputTokens = prompts.length * 800;
+  // Estimate output based on tokens per scenario from tuning config
+  const estimatedOutputTokens =
+    prompts.length * DEFAULT_TUNING.token_estimates.output_per_scenario;
 
   const resolvedModel = resolveModelId(model);
   const estimatedCost = calculateCost(
@@ -134,9 +136,11 @@ export function estimateExecutionCost(
 ): TokenEstimate {
   const totalExecutions = scenarioCount * numReps;
 
-  // ~500 tokens per scenario prompt, ~2000 tokens per response
-  const inputTokens = totalExecutions * 500;
-  const outputTokens = totalExecutions * 2000;
+  // Token estimates from tuning config
+  const inputTokens =
+    totalExecutions * DEFAULT_TUNING.token_estimates.input_per_turn;
+  const outputTokens =
+    totalExecutions * DEFAULT_TUNING.token_estimates.output_per_turn;
 
   const resolvedModel = resolveModelId(model);
   const estimatedCost = calculateCost(resolvedModel, inputTokens, outputTokens);
@@ -164,9 +168,11 @@ export function estimateEvaluationCost(
 ): TokenEstimate {
   const totalEvaluations = scenarioCount * numSamples;
 
-  // ~3000 tokens for transcript + prompt, ~500 tokens for judge response
-  const inputTokens = totalEvaluations * 3000;
-  const outputTokens = totalEvaluations * 500;
+  // Token estimates from tuning config
+  const inputTokens =
+    totalEvaluations * DEFAULT_TUNING.token_estimates.transcript_prompt;
+  const outputTokens =
+    totalEvaluations * DEFAULT_TUNING.token_estimates.judge_output;
 
   const resolvedModel = resolveModelId(model);
   const estimatedCost = calculateCost(resolvedModel, inputTokens, outputTokens);
@@ -243,8 +249,11 @@ export function estimatePipelineCost(
 
   // Stage 2: Generation (estimated, not using countTokens for speed)
   const counts = calculateComponentCounts(analysis, config);
+  const tuning = getResolvedTuning(config.tuning);
   const genInputTokens =
-    counts.skills * 800 + counts.agents * 1000 + counts.commands * 200;
+    counts.skills * tuning.token_estimates.per_skill +
+    counts.agents * tuning.token_estimates.per_agent +
+    counts.commands * tuning.token_estimates.per_command;
   const genOutputTokens =
     counts.skills *
       TOKENS_PER_SCENARIO.skill *

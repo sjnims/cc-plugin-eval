@@ -6,6 +6,7 @@
  * for programmatic detection in Stage 4.
  */
 
+import { DEFAULT_TUNING } from "../../config/defaults.js";
 import { logger } from "../../utils/logging.js";
 import { withRetry } from "../../utils/retry.js";
 
@@ -432,11 +433,11 @@ export function estimateExecutionCost(
   scenarioCount: number,
   config: ExecutionConfig,
 ): number {
-  // Rough estimate based on typical token usage per scenario
-  // Input: ~500 tokens, Output: ~2000 tokens per turn
-  // Using Sonnet pricing as default
-  const inputTokensPerScenario = 500 * config.max_turns;
-  const outputTokensPerScenario = 2000 * config.max_turns;
+  // Token estimates from tuning config
+  const inputTokensPerScenario =
+    DEFAULT_TUNING.token_estimates.input_per_turn * config.max_turns;
+  const outputTokensPerScenario =
+    DEFAULT_TUNING.token_estimates.output_per_turn * config.max_turns;
 
   // Price per 1M tokens (Sonnet 4)
   const inputPrice = 3.0; // $3 per 1M input tokens

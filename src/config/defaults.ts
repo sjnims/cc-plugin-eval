@@ -2,7 +2,7 @@
  * Default configuration values.
  */
 
-import type { EvalConfig } from "../types/index.js";
+import type { EvalConfig, TuningConfig } from "../types/index.js";
 
 /**
  * Default scope configuration.
@@ -64,6 +64,71 @@ export const DEFAULT_OUTPUT = {
 };
 
 /**
+ * Default tuning configuration.
+ * These values can be overridden in config.yaml under the `tuning` section.
+ */
+export const DEFAULT_TUNING: TuningConfig = {
+  timeouts: {
+    plugin_load_ms: 30000,
+    retry_initial_ms: 1000,
+    retry_max_ms: 30000,
+  },
+  retry: {
+    max_retries: 3,
+    backoff_multiplier: 2,
+    jitter_factor: 0.1,
+  },
+  token_estimates: {
+    output_per_scenario: 800,
+    transcript_prompt: 3000,
+    judge_output: 500,
+    input_per_turn: 500,
+    output_per_turn: 2000,
+    per_skill: 600,
+    per_agent: 800,
+    per_command: 300,
+    semantic_gen_max_tokens: 1000,
+  },
+  limits: {
+    transcript_content_length: 500,
+    prompt_display_length: 80,
+    progress_bar_width: 20,
+    conflict_domain_part_min: 4,
+  },
+  batching: {
+    safety_margin: 0.75,
+  },
+};
+
+/**
+ * Get resolved tuning configuration with defaults.
+ *
+ * Merges user-provided tuning config with defaults, ensuring all values
+ * are present even if the user only overrides a subset.
+ *
+ * @param tuning - User-provided tuning config (optional)
+ * @returns Complete tuning configuration with defaults applied
+ */
+export function getResolvedTuning(
+  tuning?: Partial<TuningConfig>,
+): TuningConfig {
+  if (!tuning) {
+    return DEFAULT_TUNING;
+  }
+
+  return {
+    timeouts: { ...DEFAULT_TUNING.timeouts, ...tuning.timeouts },
+    retry: { ...DEFAULT_TUNING.retry, ...tuning.retry },
+    token_estimates: {
+      ...DEFAULT_TUNING.token_estimates,
+      ...tuning.token_estimates,
+    },
+    limits: { ...DEFAULT_TUNING.limits, ...tuning.limits },
+    batching: { ...DEFAULT_TUNING.batching, ...tuning.batching },
+  };
+}
+
+/**
  * Create default configuration with plugin path.
  *
  * @param pluginPath - Path to the plugin
@@ -77,6 +142,7 @@ export function createDefaultConfig(pluginPath: string): EvalConfig {
     execution: { ...DEFAULT_EXECUTION },
     evaluation: { ...DEFAULT_EVALUATION },
     output: { ...DEFAULT_OUTPUT },
+    tuning: { ...DEFAULT_TUNING },
     dry_run: false,
     estimate_costs: true,
     batch_threshold: 50,

@@ -155,6 +155,67 @@ export interface ConflictDetectionConfig {
 }
 
 /**
+ * Timeouts configuration.
+ */
+export interface TimeoutsConfig {
+  plugin_load_ms: number;
+  retry_initial_ms: number;
+  retry_max_ms: number;
+}
+
+/**
+ * Retry configuration.
+ */
+export interface RetryTuningConfig {
+  max_retries: number;
+  backoff_multiplier: number;
+  jitter_factor: number;
+}
+
+/**
+ * Token estimates configuration.
+ */
+export interface TokenEstimatesConfig {
+  output_per_scenario: number;
+  transcript_prompt: number;
+  judge_output: number;
+  input_per_turn: number;
+  output_per_turn: number;
+  per_skill: number;
+  per_agent: number;
+  per_command: number;
+  semantic_gen_max_tokens: number;
+}
+
+/**
+ * Display limits configuration.
+ */
+export interface LimitsConfig {
+  transcript_content_length: number;
+  prompt_display_length: number;
+  progress_bar_width: number;
+  conflict_domain_part_min: number;
+}
+
+/**
+ * Batching configuration.
+ */
+export interface BatchingConfig {
+  safety_margin: number;
+}
+
+/**
+ * Tuning configuration for runtime-adjustable parameters.
+ */
+export interface TuningConfig {
+  timeouts: TimeoutsConfig;
+  retry: RetryTuningConfig;
+  token_estimates: TokenEstimatesConfig;
+  limits: LimitsConfig;
+  batching: BatchingConfig;
+}
+
+/**
  * Complete evaluation configuration.
  */
 export interface EvalConfig {
@@ -167,6 +228,8 @@ export interface EvalConfig {
   output: OutputConfig;
   resume?: ResumeConfig;
   fast_mode?: FastModeConfig;
+  /** Runtime-adjustable tuning parameters */
+  tuning?: TuningConfig;
   /** Generate scenarios without execution */
   dry_run: boolean;
   /** Show cost estimate before execution */

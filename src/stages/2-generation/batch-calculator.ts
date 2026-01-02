@@ -10,6 +10,8 @@
  *   - Claude 4.x with thinking: subtract thinking_budget from max
  */
 
+import { DEFAULT_TUNING } from "../../config/defaults.js";
+
 import type { ComponentType, ReasoningEffort } from "../../types/index.js";
 
 /**
@@ -34,12 +36,12 @@ export interface BatchCalculation {
 
 /**
  * Estimated tokens per generated scenario by component type.
- * These are conservative estimates based on typical LLM output.
+ * Values are sourced from DEFAULT_TUNING for centralized configuration.
  */
 export const TOKENS_PER_SCENARIO: Record<ComponentType, number> = {
-  skill: 600, // Simpler, focused on trigger phrases
-  agent: 800, // More context needed for examples
-  command: 300, // Deterministic, minimal generation
+  skill: DEFAULT_TUNING.token_estimates.per_skill,
+  agent: DEFAULT_TUNING.token_estimates.per_agent,
+  command: DEFAULT_TUNING.token_estimates.per_command,
 };
 
 /**
@@ -71,8 +73,9 @@ export const MODEL_MAX_TOKENS: Record<string, number> = {
 
 /**
  * Default safety margin for token calculations.
+ * Value is sourced from DEFAULT_TUNING for centralized configuration.
  */
-export const DEFAULT_SAFETY_MARGIN = 0.75;
+export const DEFAULT_SAFETY_MARGIN = DEFAULT_TUNING.batching.safety_margin;
 
 /**
  * Get max output tokens for a model.

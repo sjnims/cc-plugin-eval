@@ -3,6 +3,10 @@
  * Handles transient API errors gracefully.
  */
 
+import { DEFAULT_TUNING } from "../config/defaults.js";
+
+import type { TuningConfig } from "../types/index.js";
+
 /**
  * Retry options.
  */
@@ -25,15 +29,35 @@ export interface RetryOptions {
 
 /**
  * Default retry options.
+ * Values are sourced from DEFAULT_TUNING for centralized configuration.
  */
 export const DEFAULT_RETRY_OPTIONS: RetryOptions = {
-  maxRetries: 3,
-  initialDelayMs: 1000,
-  maxDelayMs: 30000,
-  backoffMultiplier: 2,
-  jitterFactor: 0.1,
+  maxRetries: DEFAULT_TUNING.retry.max_retries,
+  initialDelayMs: DEFAULT_TUNING.timeouts.retry_initial_ms,
+  maxDelayMs: DEFAULT_TUNING.timeouts.retry_max_ms,
+  backoffMultiplier: DEFAULT_TUNING.retry.backoff_multiplier,
+  jitterFactor: DEFAULT_TUNING.retry.jitter_factor,
   isRetryable: isTransientError,
 };
+
+/**
+ * Create retry options from tuning configuration.
+ *
+ * @param tuning - Tuning configuration
+ * @returns Retry options based on tuning config
+ */
+export function createRetryOptionsFromTuning(
+  tuning: TuningConfig,
+): RetryOptions {
+  return {
+    maxRetries: tuning.retry.max_retries,
+    initialDelayMs: tuning.timeouts.retry_initial_ms,
+    maxDelayMs: tuning.timeouts.retry_max_ms,
+    backoffMultiplier: tuning.retry.backoff_multiplier,
+    jitterFactor: tuning.retry.jitter_factor,
+    isRetryable: isTransientError,
+  };
+}
 
 /**
  * Determine if an error is transient and retryable.

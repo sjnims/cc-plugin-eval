@@ -16,7 +16,9 @@ import type { PluginLoadResult } from "../../../../src/types/index.js";
 describe("getRecoveryHint", () => {
   it("should return hint for known error types", () => {
     expect(getRecoveryHint("manifest_not_found")).toContain("plugin.json");
-    expect(getRecoveryHint("timeout")).toContain("30 seconds");
+    expect(getRecoveryHint("timeout")).toContain(
+      "tuning.timeouts.plugin_load_ms",
+    );
     expect(getRecoveryHint("mcp_connection_failed")).toContain("MCP server");
   });
 

@@ -446,6 +446,109 @@ conflict_detection:
   cross_plugin: false
 
 # ==============================================================================
+# TUNING - Runtime-Adjustable Parameters
+# ==============================================================================
+# Fine-tune framework behavior without modifying source code.
+# All values have sensible defaults - only override what you need.
+#
+# TIMEOUTS:
+#   plugin_load_ms - Maximum time to wait for plugin load (milliseconds)
+#     Possible values: 5000-120000
+#     Default: 30000 (30 seconds)
+#
+#   retry_initial_ms - Initial delay before first retry (milliseconds)
+#     Possible values: 100-10000
+#     Default: 1000 (1 second)
+#
+#   retry_max_ms - Maximum delay between retries (milliseconds)
+#     Possible values: 1000-120000
+#     Default: 30000 (30 seconds)
+#
+# RETRY:
+#   max_retries - Maximum retry attempts for transient errors
+#     Possible values: 0-10
+#     Default: 3
+#
+#   backoff_multiplier - Exponential backoff multiplier
+#     Possible values: 1-5
+#     Default: 2
+#
+#   jitter_factor - Random jitter to prevent thundering herd (0.0-1.0)
+#     Possible values: 0-1
+#     Default: 0.1
+#
+# TOKEN_ESTIMATES (for cost estimation):
+#   output_per_scenario - Estimated output tokens per scenario generation
+#     Default: 800
+#
+#   transcript_prompt - Estimated tokens for transcript + evaluation prompt
+#     Default: 3000
+#
+#   judge_output - Estimated tokens for judge response
+#     Default: 500
+#
+#   input_per_turn - Estimated input tokens per execution turn
+#     Default: 500
+#
+#   output_per_turn - Estimated output tokens per execution turn
+#     Default: 2000
+#
+#   per_skill - Estimated input tokens per skill component
+#     Default: 600
+#
+#   per_agent - Estimated input tokens per agent component
+#     Default: 800
+#
+#   per_command - Estimated input tokens per command component
+#     Default: 300
+#
+#   semantic_gen_max_tokens - Max tokens for semantic variation generation
+#     Default: 1000
+#
+# LIMITS:
+#   transcript_content_length - Max characters per transcript message for display
+#     Default: 500
+#
+#   prompt_display_length - Max characters for prompt display in verbose output
+#     Default: 80
+#
+#   progress_bar_width - Width of progress bar in characters
+#     Default: 20
+#
+#   conflict_domain_part_min - Min length for domain parts in conflict detection
+#     Default: 4
+#
+# BATCHING:
+#   safety_margin - Token safety margin for batch calculations (0.5-1.0)
+#     Default: 0.75
+tuning:
+  timeouts:
+    plugin_load_ms: 30000
+    retry_initial_ms: 1000
+    retry_max_ms: 30000
+  retry:
+    max_retries: 3
+    backoff_multiplier: 2
+    jitter_factor: 0.1
+  token_estimates:
+    output_per_scenario: 800
+    transcript_prompt: 3000
+    judge_output: 500
+    input_per_turn: 500
+    output_per_turn: 2000
+    per_skill: 600
+    per_agent: 800
+    per_command: 300
+    semantic_gen_max_tokens: 1000
+  limits:
+    transcript_content_length: 500
+    prompt_display_length: 80
+    progress_bar_width: 20
+    conflict_domain_part_min: 4
+  batching:
+    safety_margin: 0.75
+
+# ==============================================================================
 # DEBUGGING & PERFORMANCE
 # ==============================================================================
 #   debug - Enable debug-level logging

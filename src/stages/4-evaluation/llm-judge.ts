@@ -7,6 +7,7 @@
  * Uses Anthropic's beta structured output API for guaranteed JSON parsing.
  */
 
+import { DEFAULT_TUNING } from "../../config/defaults.js";
 import { withRetry } from "../../utils/retry.js";
 import { resolveModelId } from "../2-generation/cost-estimator.js";
 
@@ -126,7 +127,7 @@ For positive scenarios (expected_trigger: true):
  */
 export function formatTranscriptWithIds(
   transcript: Transcript,
-  maxContentLength = 500,
+  maxContentLength = DEFAULT_TUNING.limits.transcript_content_length,
 ): string {
   return transcript.events
     .map((event) => formatEvent(event, maxContentLength))

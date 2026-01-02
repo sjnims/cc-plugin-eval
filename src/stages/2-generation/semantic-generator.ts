@@ -11,6 +11,7 @@
  * 4. Informal variations: "create a hook" → "hook me up with a hook", "need a hook"
  */
 
+import { DEFAULT_TUNING } from "../../config/defaults.js";
 import { withRetry } from "../../utils/retry.js";
 
 import { resolveModelId } from "./cost-estimator.js";
@@ -80,7 +81,7 @@ export async function generateSemanticVariations(
     const response = await withRetry(async () => {
       const result = await client.messages.create({
         model: resolveModelId(model),
-        max_tokens: 1000,
+        max_tokens: DEFAULT_TUNING.token_estimates.semantic_gen_max_tokens,
         messages: [{ role: "user", content: prompt }],
       });
 

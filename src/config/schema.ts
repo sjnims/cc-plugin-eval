@@ -5,6 +5,67 @@
 import { z } from "zod";
 
 /**
+ * Timeouts configuration schema.
+ */
+export const TimeoutsConfigSchema = z.object({
+  plugin_load_ms: z.number().int().min(5000).max(120000).default(30000),
+  retry_initial_ms: z.number().int().min(100).max(10000).default(1000),
+  retry_max_ms: z.number().int().min(1000).max(120000).default(30000),
+});
+
+/**
+ * Retry configuration schema.
+ */
+export const RetryConfigSchema = z.object({
+  max_retries: z.number().int().min(0).max(10).default(3),
+  backoff_multiplier: z.number().min(1).max(5).default(2),
+  jitter_factor: z.number().min(0).max(1).default(0.1),
+});
+
+/**
+ * Token estimates configuration schema.
+ */
+export const TokenEstimatesConfigSchema = z.object({
+  output_per_scenario: z.number().int().min(100).max(5000).default(800),
+  transcript_prompt: z.number().int().min(500).max(10000).default(3000),
+  judge_output: z.number().int().min(100).max(2000).default(500),
+  input_per_turn: z.number().int().min(100).max(5000).default(500),
+  output_per_turn: z.number().int().min(500).max(10000).default(2000),
+  per_skill: z.number().int().min(100).max(2000).default(600),
+  per_agent: z.number().int().min(100).max(3000).default(800),
+  per_command: z.number().int().min(50).max(1000).default(300),
+  semantic_gen_max_tokens: z.number().int().min(500).max(4000).default(1000),
+});
+
+/**
+ * Display limits configuration schema.
+ */
+export const LimitsConfigSchema = z.object({
+  transcript_content_length: z.number().int().min(100).max(2000).default(500),
+  prompt_display_length: z.number().int().min(20).max(500).default(80),
+  progress_bar_width: z.number().int().min(5).max(100).default(20),
+  conflict_domain_part_min: z.number().int().min(1).max(10).default(4),
+});
+
+/**
+ * Batching configuration schema.
+ */
+export const BatchingConfigSchema = z.object({
+  safety_margin: z.number().min(0.5).max(1).default(0.75),
+});
+
+/**
+ * Complete tuning configuration schema.
+ */
+export const TuningConfigSchema = z.object({
+  timeouts: TimeoutsConfigSchema.default({}),
+  retry: RetryConfigSchema.default({}),
+  token_estimates: TokenEstimatesConfigSchema.default({}),
+  limits: LimitsConfigSchema.default({}),
+  batching: BatchingConfigSchema.default({}),
+});
+
+/**
  * Plugin configuration schema.
  */
 export const PluginConfigSchema = z.object({
@@ -156,6 +217,7 @@ export const EvalConfigSchema = z.object({
   output: OutputConfigSchema.default({}),
   resume: ResumeConfigSchema.optional(),
   fast_mode: FastModeConfigSchema.optional(),
+  tuning: TuningConfigSchema.optional(),
   dry_run: z.boolean().default(false),
   estimate_costs: z.boolean().default(true),
   batch_threshold: z.number().int().min(1).default(50),

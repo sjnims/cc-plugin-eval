@@ -88,6 +88,12 @@ export type {
   FastModeConfig,
   McpServersConfig,
   ConflictDetectionConfig,
+  TimeoutsConfig,
+  RetryTuningConfig,
+  TokenEstimatesConfig,
+  LimitsConfig,
+  BatchingConfig,
+  TuningConfig,
   EvalConfig,
 } from "./config.js";
 

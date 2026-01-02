@@ -12,6 +12,8 @@
  * - MAJOR: Wrong component triggered, or different component types triggered
  */
 
+import { DEFAULT_TUNING } from "../../config/defaults.js";
+
 import type {
   ComponentType,
   ConflictAnalysis,
@@ -22,8 +24,9 @@ import type {
 /**
  * Minimum part length for domain matching.
  * Parts shorter than this are ignored in domain comparison.
+ * Value is sourced from DEFAULT_TUNING for centralized configuration.
  */
-const MIN_DOMAIN_PART_LENGTH = 4;
+const MIN_DOMAIN_PART_LENGTH = DEFAULT_TUNING.limits.conflict_domain_part_min;
 
 /**
  * Convert ProgrammaticDetection to TriggeredComponent.

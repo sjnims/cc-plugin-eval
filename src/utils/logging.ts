@@ -4,6 +4,8 @@
 
 import chalk from "chalk";
 
+import { DEFAULT_TUNING } from "../config/defaults.js";
+
 /**
  * Log levels.
  */
@@ -232,10 +234,14 @@ export function progress(
  *
  * @param current - Current value
  * @param total - Total value
- * @param width - Bar width
+ * @param width - Bar width (defaults to tuning config value)
  * @returns Progress bar string
  */
-function createProgressBar(current: number, total: number, width = 20): string {
+function createProgressBar(
+  current: number,
+  total: number,
+  width = DEFAULT_TUNING.limits.progress_bar_width,
+): string {
   const filled = Math.round((current / total) * width);
   const empty = width - filled;
   return `[${"█".repeat(filled)}${"░".repeat(empty)}]`;

@@ -5,6 +5,8 @@
  * real-time progress reporting during long-running evaluations.
  */
 
+import { DEFAULT_TUNING } from "../../config/defaults.js";
+
 import type { ProgressCallbacks } from "../../types/index.js";
 
 /**
@@ -96,8 +98,8 @@ export const verboseProgress: ProgressCallbacks = {
       `  Type: ${scenario.component_type} | Expected: ${scenario.expected_trigger ? "trigger" : "no trigger"}`,
     );
 
-    // Truncate prompt if too long
-    const maxPromptLen = 80;
+    // Truncate prompt if too long (limit from tuning config)
+    const maxPromptLen = DEFAULT_TUNING.limits.prompt_display_length;
     const promptDisplay =
       scenario.user_prompt.length > maxPromptLen
         ? `${scenario.user_prompt.slice(0, maxPromptLen)}...`
