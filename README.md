@@ -152,7 +152,7 @@ cc-plugin-eval report -r <run-id> --output junit-xml
 | Option                | Description                                       |
 | --------------------- | ------------------------------------------------- |
 | `-p, --plugin <path>` | Plugin directory path                             |
-| `-c, --config <path>` | Config file (default: `config.yaml`)                |
+| `-c, --config <path>` | Config file (default: `config.yaml`)              |
 | `--dry-run`           | Generate scenarios without execution              |
 | `--verbose`           | Enable debug output                               |
 | `--fast`              | Only run previously failed scenarios              |

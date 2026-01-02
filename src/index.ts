@@ -409,7 +409,9 @@ program
     try {
       const cliOptions = extractCLIOptions(options);
       const configPath =
-        typeof options["config"] === "string" ? options["config"] : "config.yaml";
+        typeof options["config"] === "string"
+          ? options["config"]
+          : "config.yaml";
       const config = loadConfigWithOverrides(configPath, cliOptions);
 
       if (config.verbose) {
