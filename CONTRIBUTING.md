@@ -35,8 +35,11 @@ src/
 └── utils/                # Retry, concurrency, logging utilities
 
 tests/
-├── unit/                 # Unit tests mirror src/ structure
-└── integration/          # Integration tests for full stages
+├── unit/                 # Unit tests (mirror src/ structure)
+│   └── stages/           # Per-stage test files
+├── integration/          # Integration tests for full stages
+├── mocks/                # Mock implementations for testing
+└── fixtures/             # Test data and mock plugins
 ```
 
 See [CLAUDE.md](CLAUDE.md) for detailed architecture documentation.
