@@ -1,0 +1,123 @@
+# =============================================================================
+# Codecov Configuration
+# https://docs.codecov.com/docs/codecov-yaml
+# =============================================================================
+
+codecov:
+  require_ci_to_pass: true
+  notify:
+    after_n_builds: 1 # Single CI job, notify after first build
+
+# =============================================================================
+# Coverage Configuration
+# =============================================================================
+coverage:
+  precision: 2
+  round: down
+  range: "65...100" # Lower bound matches vitest branches threshold (65%)
+
+  # ---------------------------------------------------------------------------
+  # Status Checks
+  # These appear as GitHub status checks on PRs
+  # ---------------------------------------------------------------------------
+  status:
+    project:
+      default:
+        target: 78% # Match vitest threshold
+        threshold: 2% # Allow 2% drop without failing
+        base: auto
+        if_ci_failed: error
+    patch:
+      default:
+        target: 75% # New code should be well-tested
+        threshold: 5% # More lenient for patches
+        base: auto
+
+  # ---------------------------------------------------------------------------
+  # Ignore Patterns
+  # These files are excluded from coverage calculation
+  # ---------------------------------------------------------------------------
+  ignore:
+    - "src/types/**" # Type definitions only
+    - "src/index.ts" # CLI entry point
+    - "src/**/index.ts" # Re-export modules
+    - "**/*.d.ts" # TypeScript declaration files
+
+# =============================================================================
+# Flags
+# Group coverage by test type
+# =============================================================================
+flags:
+  unit:
+    paths:
+      - src/
+    carryforward: false
+
+# =============================================================================
+# Components
+# Track coverage per feature area with independent thresholds
+# =============================================================================
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: 70% # Default threshold for components
+
+  individual_components:
+    - component_id: stages-analysis
+      name: "Stage 1: Analysis"
+      paths:
+        - src/stages/1-analysis/**
+
+    - component_id: stages-generation
+      name: "Stage 2: Generation"
+      paths:
+        - src/stages/2-generation/**
+
+    - component_id: stages-execution
+      name: "Stage 3: Execution"
+      paths:
+        - src/stages/3-execution/**
+
+    - component_id: stages-evaluation
+      name: "Stage 4: Evaluation"
+      paths:
+        - src/stages/4-evaluation/**
+
+    - component_id: utils
+      name: Utilities
+      paths:
+        - src/utils/**
+
+    - component_id: config
+      name: Configuration
+      paths:
+        - src/config/**
+
+    - component_id: state
+      name: State Management
+      paths:
+        - src/state/**
+
+# =============================================================================
+# PR Comments
+# Configure how coverage is displayed in PR comments
+# =============================================================================
+comment:
+  layout: "header, diff, flags, components, footer"
+  behavior: default
+  require_changes: true # Only comment if coverage changes
+  require_base: true # Require base report for comparison
+  require_head: true # Require head report
+
+# =============================================================================
+# Parsers
+# File parsing configuration
+# =============================================================================
+parsers:
+  gcov:
+    branch_detection:
+      conditional: true
+      loop: true
+      macro: false
+      method: false
