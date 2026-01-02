@@ -2,10 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   calculateDelay,
+  createRetryOptionsFromTuning,
   createRetryWrapper,
   isTransientError,
   withRetry,
 } from "../../../src/utils/retry.js";
+import { DEFAULT_TUNING } from "../../../src/config/defaults.js";
 
 describe("isTransientError", () => {
   it("identifies rate limit errors", () => {
@@ -151,5 +153,55 @@ describe("createRetryWrapper", () => {
 
     const result = await retry(fn);
     expect(result).toBe("result");
+  });
+});
+
+describe("createRetryOptionsFromTuning", () => {
+  it("creates retry options from DEFAULT_TUNING", () => {
+    const options = createRetryOptionsFromTuning(DEFAULT_TUNING);
+
+    expect(options.maxRetries).toBe(DEFAULT_TUNING.retry.max_retries);
+    expect(options.initialDelayMs).toBe(
+      DEFAULT_TUNING.timeouts.retry_initial_ms,
+    );
+    expect(options.maxDelayMs).toBe(DEFAULT_TUNING.timeouts.retry_max_ms);
+    expect(options.backoffMultiplier).toBe(
+      DEFAULT_TUNING.retry.backoff_multiplier,
+    );
+    expect(options.jitterFactor).toBe(DEFAULT_TUNING.retry.jitter_factor);
+    expect(options.isRetryable).toBe(isTransientError);
+  });
+
+  it("creates retry options from custom tuning config", () => {
+    const customTuning = {
+      ...DEFAULT_TUNING,
+      timeouts: {
+        ...DEFAULT_TUNING.timeouts,
+        retry_initial_ms: 500,
+        retry_max_ms: 60000,
+      },
+      retry: {
+        max_retries: 5,
+        backoff_multiplier: 3,
+        jitter_factor: 0.2,
+      },
+    };
+
+    const options = createRetryOptionsFromTuning(customTuning);
+
+    expect(options.maxRetries).toBe(5);
+    expect(options.initialDelayMs).toBe(500);
+    expect(options.maxDelayMs).toBe(60000);
+    expect(options.backoffMultiplier).toBe(3);
+    expect(options.jitterFactor).toBe(0.2);
+  });
+
+  it("preserves isRetryable function reference", () => {
+    const options = createRetryOptionsFromTuning(DEFAULT_TUNING);
+
+    expect(options.isRetryable).toBe(isTransientError);
+    // Verify it works
+    const error = new Error("Rate limit");
+    expect(options.isRetryable?.(error)).toBe(true);
   });
 });
