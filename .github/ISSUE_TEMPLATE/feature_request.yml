@@ -18,7 +18,7 @@ body:
         - New component type support
         - CLI commands or UX
         - Output / reporting formats
-        - Configuration schema (seed.yaml)
+        - Configuration schema (config.yaml)
         - Pipeline architecture
         - SDK integration (Anthropic or Agent SDK)
         - Resume / checkpoint functionality

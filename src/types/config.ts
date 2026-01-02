@@ -1,6 +1,6 @@
 /**
  * Configuration type definitions.
- * Represents the seed.yaml configuration structure.
+ * Represents the config.yaml configuration structure.
  */
 
 /**

@@ -13,7 +13,7 @@
 - [ ] Refactoring (code change that neither fixes a bug nor adds a feature)
 - [ ] Test (adding or updating tests)
 - [ ] Documentation update (improvements to README, CLAUDE.md, or inline docs)
-- [ ] Configuration change (changes to seed.yaml, eslint, tsconfig, etc.)
+- [ ] Configuration change (changes to config.yaml, eslint, tsconfig, etc.)
 
 ## Component(s) Affected
 
@@ -38,7 +38,7 @@
 
 - [ ] Tests (`tests/`)
 - [ ] Documentation (`CLAUDE.md`, `README.md`)
-- [ ] Configuration files (`seed.yaml`, `eslint.config.js`, `tsconfig.json`, etc.)
+- [ ] Configuration files (`config.yaml`, `eslint.config.js`, `tsconfig.json`, etc.)
 - [ ] GitHub templates/workflows (`.github/`)
 - [ ] Other (please specify):
 

@@ -1,0 +1,471 @@
+# ==============================================================================
+# PLUGIN CONFIGURATION
+# ==============================================================================
+# Specify the plugin to evaluate. Use either plugin.path OR marketplace.path.
+#
+#   path - Path to the plugin directory (absolute or relative to cwd)
+#     Example: "./my-plugin" or "/Users/you/plugins/my-plugin"
+#     Required: Yes (unless using marketplace mode)
+#
+#   name - Override the plugin name from plugin.json
+#     Possible values: Any string, or null to use manifest name
+#     Default: null
+plugin:
+  path: "./path/to/plugin"
+  name: null
+
+# ==============================================================================
+# MARKETPLACE MODE (Alternative to single plugin evaluation)
+# ==============================================================================
+# Evaluate all plugins in a marketplace directory.
+#
+#   path - Path to marketplace directory containing multiple plugins
+#     Example: "./my-marketplace" or null to disable marketplace mode
+#     Default: null
+#
+#   evaluate_all - Evaluate all plugins in the marketplace
+#     Possible values:
+#       - true - Evaluate all plugins sequentially
+#       - false - Marketplace path ignored
+#     Default: false
+marketplace:
+  path: null
+  evaluate_all: false
+
+# ==============================================================================
+# SCOPE - Component Types to Evaluate
+# ==============================================================================
+# Control which plugin component types are tested.
+#
+#   skills - Evaluate skill components (SKILL.md files)
+#     Possible values:
+#       - true - Generate scenarios for skills based on trigger patterns
+#       - false - Skip skill evaluation
+#     Default: true
+#
+#   agents - Evaluate agent components (agent .md files)
+#     Possible values:
+#       - true - Test agent triggering based on descriptions
+#       - false - Skip agent evaluation
+#     Default: true
+#
+#   commands - Evaluate command components (command .md files)
+#     Possible values:
+#       - true - Test direct command invocation and slash command detection
+#       - false - Skip command evaluation
+#     Default: true
+#
+#   hooks - Evaluate hook components (hooks.json)
+#     Possible values:
+#       - true - Test hook triggering (Phase 2 feature)
+#       - false - Skip hook evaluation
+#     Default: false (not yet implemented)
+#
+#   mcp_servers - Evaluate MCP server components (.mcp.json)
+#     Possible values:
+#       - true - Test MCP server tool registration (Phase 3 feature)
+#       - false - Skip MCP evaluation
+#     Default: false (not yet implemented)
+scope:
+  skills: true
+  agents: true
+  commands: true
+  hooks: false
+  mcp_servers: false
+
+# ==============================================================================
+# STAGE 2: GENERATION - Test Scenario Creation
+# ==============================================================================
+# Configure how test scenarios are generated using LLMs.
+#
+#   model - Model for scenario generation
+#     Possible values:
+#       - "claude-opus-4-5-20251101" - Most creative, highest cost
+#       - "claude-sonnet-4-5-20250929" - Balanced creativity and cost (recommended)
+#       - "claude-sonnet-4-20250514" - Previous generation, lower cost
+#       - "claude-haiku-3-5-20250929" - Fastest, lowest cost
+#     Default: "claude-sonnet-4-5-20250929"
+#
+#   scenarios_per_component - Base scenarios generated per component
+#     Possible values: 1-100 (practical limit ~20 for cost)
+#       - Low (1-3) - Quick smoke test
+#       - Medium (5-10) - Standard evaluation
+#       - High (15+) - Comprehensive testing
+#     Default: 5
+#
+#   diversity - Ratio of base scenarios to variations (0.0-1.0)
+#     Possible values:
+#       - 0.0 - All variations of 1 base scenario (less diverse)
+#       - 0.5 - Half base scenarios, half variations
+#       - 1.0 - All unique base scenarios (most diverse, no variations)
+#     Formula: base_count = total * diversity; variations = (total - base) / base
+#     Default: 0.7
+#
+#   max_tokens - Maximum tokens per generation response
+#     Possible values: 1000-32000
+#       - 4000 - ~5 scenarios
+#       - 8000 - ~10 scenarios (recommended)
+#       - 16000 - ~20 scenarios
+#     Default: 8000
+#
+#   reasoning_effort - Extended thinking budget for generation
+#     Possible values:
+#       - "none" - No extended thinking (fastest)
+#       - "low" - ~1K thinking tokens
+#       - "medium" - ~5K thinking tokens (recommended)
+#       - "high" - ~20K thinking tokens (slowest, most thorough)
+#     Default: "medium"
+#
+#   semantic_variations - Generate semantic synonym variations for skills
+#     Possible values:
+#       - true - Create paraphrased trigger phrases (tests robustness)
+#       - false - Use only exact trigger patterns from skill descriptions
+#     Default: true
+generation:
+  model: "claude-sonnet-4-5-20250929"
+  scenarios_per_component: 5
+  diversity: 0.7
+  max_tokens: 8000
+  reasoning_effort: "medium"
+  semantic_variations: true
+
+# ==============================================================================
+# STAGE 3: EXECUTION - Scenario Execution via Agent SDK
+# ==============================================================================
+# Configure how scenarios are executed against the plugin.
+#
+#   model - Model for executing test scenarios
+#     Possible values:
+#       - "claude-opus-4-5-20251101" - Most capable, highest cost
+#       - "claude-sonnet-4-5-20250929" - Best balance (recommended for complex plugins)
+#       - "claude-sonnet-4-20250514" - Good performance, lower cost (recommended)
+#       - "claude-haiku-3-5-20250929" - Fastest, suitable for simple plugins
+#     Default: "claude-sonnet-4-20250514"
+#
+#   max_turns - Maximum conversation turns per scenario
+#     Possible values: 1-20
+#       - 1 - Single exchange (fast, limited testing)
+#       - 5 - Standard interaction depth (recommended)
+#       - 10+ - Extended conversations (for complex workflows)
+#     Default: 5
+#
+#   timeout_ms - Timeout per scenario execution (milliseconds)
+#     Possible values: 5000-300000 (5s-5min)
+#       - 30000 - Short timeout (30s)
+#       - 60000 - Standard timeout (1min, recommended)
+#       - 120000 - Extended timeout (2min)
+#     Default: 60000
+#
+#   max_budget_usd - Stop evaluation if total cost exceeds this (USD)
+#     Possible values: 0.1-1000
+#       - 1.0 - Small test run
+#       - 10.0 - Standard evaluation (recommended)
+#       - 50+ - Comprehensive testing
+#     Default: 10.0
+#
+#   session_isolation - Prevent state leakage between scenarios
+#     Possible values:
+#       - true - Each scenario runs in fresh session (recommended)
+#       - false - Reuse sessions (faster but risks contamination)
+#     Default: true
+#
+#   permission_bypass - Automatically approve permission prompts
+#     Possible values:
+#       - true - Auto-approve all permissions (required for automation)
+#       - false - Manual approval (breaks automation)
+#     Default: true
+#
+#   allowed_tools - Whitelist of allowed tools (null = all allowed)
+#     Possible values:
+#       - null - Allow all tools
+#       - ["Read", "Glob", "Grep"] - Only allow specific tools
+#     Default: null
+#
+#   disallowed_tools - Blacklist of blocked tools
+#     Possible values:
+#       - [] - Allow all tools
+#       - ["Write", "Edit", "Bash"] - Block file modifications (recommended for safety)
+#       - ["Bash"] - Block only shell commands
+#     Default: ["Write", "Edit", "Bash"]
+#
+#   num_reps - Repetitions per scenario for statistical significance
+#     Possible values: 1-10
+#       - 1 - Single run per scenario (fast)
+#       - 3 - Triple repetition (detects flakiness)
+#       - 5+ - High confidence (expensive)
+#     Default: 1
+#
+#   additional_plugins - Load extra plugins for cross-plugin conflict testing
+#     Possible values:
+#       - [] - No additional plugins
+#       - ["./other-plugin"] - Test alongside other plugin
+#       - ["plugin1", "plugin2"] - Test with multiple plugins
+#     Default: []
+execution:
+  model: "claude-sonnet-4-20250514"
+  max_turns: 5
+  timeout_ms: 60000
+  max_budget_usd: 10.0
+  session_isolation: true
+  permission_bypass: true
+  allowed_tools: null
+  disallowed_tools:
+    - Write
+    - Edit
+    - Bash
+  num_reps: 1
+  additional_plugins: []
+
+# ==============================================================================
+# STAGE 4: EVALUATION - Detection and Judgment
+# ==============================================================================
+# Configure how component triggering is detected and judged.
+#
+#   model - Model for LLM judgment (when programmatic detection insufficient)
+#     Possible values:
+#       - "claude-opus-4-5-20251101" - Most accurate judgment
+#       - "claude-sonnet-4-5-20250929" - Balanced accuracy and cost (recommended)
+#       - "claude-sonnet-4-20250514" - Good judgment, lower cost
+#       - "claude-haiku-3-5-20250929" - Fast judgment (may miss nuance)
+#     Default: "claude-sonnet-4-5-20250929"
+#
+#   max_tokens - Maximum tokens for judgment response
+#     Possible values: 1000-16000
+#       - 2000 - Brief judgment
+#       - 4000 - Standard judgment (recommended)
+#       - 8000+ - Detailed analysis
+#     Default: 4000
+#
+#   detection_mode - Primary detection strategy
+#     Possible values:
+#       - "programmatic_first" - Use tool captures first, LLM judge as fallback (recommended)
+#       - "llm_only" - Always use LLM judge (slower, more expensive)
+#     Default: "programmatic_first"
+#
+#   reasoning_effort - Extended thinking budget for judgment
+#     Possible values:
+#       - "none" - No extended thinking
+#       - "low" - ~1K thinking tokens (recommended for speed)
+#       - "medium" - ~5K thinking tokens
+#       - "high" - ~20K thinking tokens (most thorough)
+#     Default: "low"
+#
+#   num_samples - Multi-sample judgment for robustness
+#     Possible values: 1-10
+#       - 1 - Single judgment (fast)
+#       - 3 - Triple sampling (detects inconsistency)
+#       - 5+ - High confidence (expensive)
+#     Default: 1
+#
+#   aggregate_method - How to combine multiple sample judgments
+#     Possible values:
+#       - "average" - Mean of all scores
+#       - "median" - Middle value (robust to outliers)
+#       - "consensus" - Majority vote
+#     Default: "average"
+#
+#   include_citations - Link judgment highlights to specific message IDs
+#     Possible values:
+#       - true - Include evidence links in output
+#       - false - Judgment only, no citations
+#     Default: true
+evaluation:
+  model: "claude-sonnet-4-5-20250929"
+  max_tokens: 4000
+  detection_mode: "programmatic_first"
+  reasoning_effort: "low"
+  num_samples: 1
+  aggregate_method: "average"
+  include_citations: true
+
+# ==============================================================================
+# OUTPUT CONFIGURATION
+# ==============================================================================
+# Control output format and verbosity.
+#
+#   format - Primary output format
+#     Possible values:
+#       - "json" - JSON output (recommended for programmatic use)
+#       - "yaml" - YAML output (human-readable)
+#       - "junit-xml" - JUnit XML (for CI/CD integration)
+#       - "tap" - Test Anything Protocol
+#     Default: "json"
+#
+#   include_cli_summary - Print summary table to console
+#     Possible values:
+#       - true - Show summary after evaluation (recommended)
+#       - false - Output file only, no console summary
+#     Default: true
+#
+#   junit_test_suite_name - Test suite name for JUnit XML output
+#     Possible values: Any string
+#     Default: "cc-plugin-eval"
+output:
+  format: "json"
+  include_cli_summary: true
+  junit_test_suite_name: "cc-plugin-eval"
+
+# ==============================================================================
+# RESUME CONFIGURATION
+# ==============================================================================
+# Resume an interrupted evaluation run.
+#
+#   run_id - Previous run ID to resume from (see results/{plugin}/{run-id}/)
+#     Possible values:
+#       - null - Start new run
+#       - "20250102-120000-abc123" - Resume specific run
+#     Default: null
+#
+#   from_stage - Pipeline stage to resume from
+#     Possible values:
+#       - null - Auto-detect from state.json
+#       - "analysis" - Re-run from Stage 1
+#       - "generation" - Re-run from Stage 2
+#       - "execution" - Re-run from Stage 3
+#       - "evaluation" - Re-run from Stage 4
+#     Default: null
+resume:
+  run_id: null
+  from_stage: null
+
+# ==============================================================================
+# FAST MODE - Run Only Failed Scenarios
+# ==============================================================================
+# Re-run only scenarios that failed in a previous run (regression testing).
+#
+#   enabled - Enable fast mode
+#     Possible values:
+#       - true - Only run previously failed scenarios
+#       - false - Run all scenarios
+#     Default: false
+#
+#   failed_run_id - Run ID to extract failed scenarios from
+#     Possible values:
+#       - null - Use most recent run
+#       - "20250102-120000-abc123" - Use specific run
+#     Default: null
+fast_mode:
+  enabled: false
+  failed_run_id: null
+
+# ==============================================================================
+# DRY-RUN & COST ESTIMATION
+# ==============================================================================
+#   dry_run - Stop after scenario generation (no execution)
+#     Possible values:
+#       - true - Generate scenarios, show cost estimate, then exit
+#       - false - Run full pipeline
+#     Default: false
+#
+#   estimate_costs - Show cost estimate before execution
+#     Possible values:
+#       - true - Display estimated cost and prompt for confirmation
+#       - false - Skip estimation, start execution immediately
+#     Default: true
+dry_run: false
+estimate_costs: true
+
+# ==============================================================================
+# BATCH PROCESSING (For Large Evaluations)
+# ==============================================================================
+# Use Anthropic Batches API for cost savings on large runs.
+#
+#   batch_threshold - Use batches when scenario count >= this number
+#     Possible values: 1-1000
+#       - 50 - Default threshold (50% cost savings)
+#       - 100 - Higher threshold (use batches less often)
+#       - 1 - Always use batches (maximum savings, slower)
+#     Default: 50
+#
+#   force_synchronous - Force individual API calls (disable batching)
+#     Possible values:
+#       - true - Never use batches (faster results, higher cost)
+#       - false - Use batches when above threshold
+#     Default: false
+#
+#   poll_interval_ms - How often to check batch status (milliseconds)
+#     Possible values: 1000-300000 (1s-5min)
+#       - 10000 - Check every 10s (frequent polling)
+#       - 30000 - Check every 30s (recommended)
+#       - 60000 - Check every 1min (patient polling)
+#     Default: 30000
+batch_threshold: 50
+force_synchronous: false
+poll_interval_ms: 30000
+
+# ==============================================================================
+# FILE CHANGE REWINDING (For Write/Edit Testing)
+# ==============================================================================
+#   rewind_file_changes - Undo file modifications after each scenario
+#     Possible values:
+#       - true - Restore files to pre-scenario state (enables Write/Edit testing)
+#       - false - Keep file changes (faster, but requires clean state)
+#     Use case: Test plugins that modify files without polluting workspace
+#     Default: false
+rewind_file_changes: false
+
+# ==============================================================================
+# MCP SERVER CONFIGURATION
+# ==============================================================================
+# Configure Model Context Protocol server testing.
+#
+#   skip_auth_required - Skip MCP servers that require OAuth
+#     Possible values:
+#       - true - Skip servers needing user authentication (recommended for automation)
+#       - false - Attempt to load all servers (may hang on OAuth prompts)
+#     Default: true
+#
+#   connection_timeout_ms - Timeout for MCP server connection (milliseconds)
+#     Possible values: 1000-60000 (1s-1min)
+#       - 5000 - Quick timeout (5s)
+#       - 10000 - Standard timeout (10s, recommended)
+#       - 30000 - Patient timeout (30s)
+#     Default: 10000
+mcp_servers:
+  skip_auth_required: true
+  connection_timeout_ms: 10000
+
+# ==============================================================================
+# CONFLICT DETECTION
+# ==============================================================================
+# Detect when multiple components trigger for the same scenario.
+#
+#   enabled - Enable conflict detection and reporting
+#     Possible values:
+#       - true - Track and report conflicts in evaluation output
+#       - false - Ignore conflicts
+#     Default: true
+#
+#   cross_plugin - Detect conflicts with additional_plugins
+#     Possible values:
+#       - true - Check for conflicts across multiple loaded plugins
+#       - false - Only detect conflicts within target plugin
+#     Default: false
+conflict_detection:
+  enabled: true
+  cross_plugin: false
+
+# ==============================================================================
+# DEBUGGING & PERFORMANCE
+# ==============================================================================
+#   debug - Enable debug-level logging
+#     Possible values:
+#       - true - Show debug logs (verbose)
+#       - false - Show info/warn/error only
+#     Default: false
+#
+#   verbose - Detailed progress output per scenario
+#     Possible values:
+#       - true - Show per-scenario progress, transcripts, tool calls
+#       - false - Show only summary progress
+#     Default: false
+#
+#   max_concurrent - Maximum concurrent API calls
+#     Possible values: 1-50
+#       - 1 - Sequential (slowest, safest)
+#       - 10 - Moderate concurrency (recommended)
+#       - 20+ - High concurrency (faster, risks rate limits)
+#     Default: 10
+debug: false
+verbose: false
+max_concurrent: 10

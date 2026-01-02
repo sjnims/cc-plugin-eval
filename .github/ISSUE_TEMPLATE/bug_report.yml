@@ -132,7 +132,7 @@ body:
   - type: textarea
     id: config
     attributes:
-      label: Relevant seed.yaml Configuration
+      label: Relevant config.yaml Configuration
       description: Include any relevant configuration settings
       placeholder: |
         scope:

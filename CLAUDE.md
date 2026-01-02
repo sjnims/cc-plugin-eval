@@ -50,7 +50,7 @@ markdownlint "*.md"
 markdownlint --fix "*.md"
 
 # YAML
-uvx yamllint -c .yamllint.yml seed.yaml .yamllint.yml
+uvx yamllint -c .yamllint.yml config.yaml .yamllint.yml
 
 # GitHub Actions
 actionlint .github/workflows/*.yml
@@ -127,7 +127,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 ## Configuration
 
-Main config is `seed.yaml`. Key settings:
+Main config is `config.yaml`. Key settings:
 
 - `scope`: Enable/disable skill, agent, command, hook, MCP evaluation
 - `generation.diversity`: 0-1 ratio controlling base scenarios vs variations

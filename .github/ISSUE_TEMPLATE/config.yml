@@ -1,11 +1,26 @@
 blank_issues_enabled: false
 contact_links:
+  # 1. Documentation first - many issues are answered here
+  - name: Documentation & Troubleshooting
+    url: https://github.com/sjnims/cc-plugin-eval/blob/main/README.md
+    about: Full documentation, CLI usage, architecture overview, and troubleshooting guide
+
+  # 2. Contributing Guidelines - for those wanting to contribute
+  - name: Contributing Guidelines
+    url: https://github.com/sjnims/cc-plugin-eval/blob/main/CONTRIBUTING.md
+    about: Learn how to contribute, coding standards, and pull request process
+
+  # 3. GitHub Discussions - preferred for questions
   - name: GitHub Discussions
     url: https://github.com/sjnims/cc-plugin-eval/discussions
-    about: Ask questions, share ideas, and get help from the community (preferred for questions)
+    about: Ask questions, share ideas, and get help from the community
+
+  # 4. Claude Code Documentation - general plugin development
   - name: Claude Code Documentation
-    url: https://code.claude.com/docs
-    about: Official Claude Code documentation and guides
+    url: https://code.claude.com/docs/en/overview
+    about: Official Claude Code documentation for plugin development
+
+  # 5. Agent SDK Documentation - specific to execution stage
   - name: Agent SDK Documentation
     url: https://platform.claude.com/docs/en/agent-sdk/overview
-    about: Claude Agent SDK used for plugin execution
+    about: Claude Agent SDK documentation (used in Stage 3 execution)

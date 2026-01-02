@@ -103,10 +103,10 @@ body:
     id: config
     attributes:
       label: Configuration Used
-      description: "Share relevant seed.yaml settings if helpful"
+      description: "Share relevant config.yaml settings if helpful"
       placeholder: |
         ```yaml
-        # Relevant seed.yaml excerpt
+        # Relevant config.yaml excerpt
         ```
     validations:
       required: false

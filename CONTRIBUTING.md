@@ -97,7 +97,7 @@ npx prettier --check "src/**/*.ts" "*.json" "*.md"
 markdownlint "*.md"
 
 # YAML
-uvx yamllint -c .yamllint.yml seed.yaml .yamllint.yml
+uvx yamllint -c .yamllint.yml config.yaml .yamllint.yml
 
 # GitHub Actions
 actionlint .github/workflows/*.yml
@@ -200,7 +200,7 @@ npm run build
 # Additional linters
 npx prettier --check "src/**/*.ts" "*.json" "*.md"
 markdownlint "*.md"
-uvx yamllint -c .yamllint.yml seed.yaml .yamllint.yml
+uvx yamllint -c .yamllint.yml config.yaml .yamllint.yml
 actionlint .github/workflows/*.yml
 ```
 

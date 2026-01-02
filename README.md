@@ -116,7 +116,7 @@ cc-plugin-eval run -p ./plugin
 
 # With options
 cc-plugin-eval run -p ./plugin \
-  --config custom-seed.yaml \
+  --config custom-config.yaml \
   --verbose \
   --samples 3
 ```
@@ -152,7 +152,7 @@ cc-plugin-eval report -r <run-id> --output junit-xml
 | Option                | Description                                       |
 | --------------------- | ------------------------------------------------- |
 | `-p, --plugin <path>` | Plugin directory path                             |
-| `-c, --config <path>` | Config file (default: `seed.yaml`)                |
+| `-c, --config <path>` | Config file (default: `config.yaml`)                |
 | `--dry-run`           | Generate scenarios without execution              |
 | `--verbose`           | Enable debug output                               |
 | `--fast`              | Only run previously failed scenarios              |
@@ -163,7 +163,7 @@ cc-plugin-eval report -r <run-id> --output junit-xml
 
 ## Configuration
 
-Configuration is managed via `seed.yaml`. Key sections:
+Configuration is managed via `config.yaml`. Key sections:
 
 ```yaml
 # Which component types to evaluate
@@ -196,7 +196,7 @@ evaluation:
   num_samples: 1 # Multi-sample judgment
 ```
 
-See the full [`seed.yaml`](./seed.yaml) for all options.
+See the full [`config.yaml`](./config.yaml) for all options.
 
 ## Output Structure
 

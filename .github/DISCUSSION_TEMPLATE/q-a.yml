@@ -7,7 +7,7 @@ body:
         Have a question about the evaluation framework? This could be about:
         - **Running evaluations** with the CLI
         - **Interpreting results** from evaluation output
-        - **Configuration** options in seed.yaml
+        - **Configuration** options in config.yaml
         - **Detection issues** (programmatic or LLM-based)
         - **Contributing** to the framework
 
@@ -31,7 +31,7 @@ body:
       options:
         - Using the CLI commands
         - Interpreting evaluation results
-        - Configuration (seed.yaml)
+        - Configuration (config.yaml)
         - Detection issues or failures
         - SDK integration (Anthropic or Agent SDK)
         - Contributing to the framework

@@ -42,7 +42,7 @@
 # =============================================================================
 # Configuration files
 # =============================================================================
-/seed.yaml @sjnims
+/config.yaml @sjnims
 /tsconfig.json @sjnims
 /eslint.config.js @sjnims
 /vitest.config.ts @sjnims

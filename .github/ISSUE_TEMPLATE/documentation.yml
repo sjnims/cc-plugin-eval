@@ -16,7 +16,7 @@ body:
         - README.md
         - CLAUDE.md
         - Architecture documentation (in-code)
-        - Configuration reference (seed.yaml)
+        - Configuration reference (config.yaml)
         - CLI help / usage
         - Inline code comments
         - TypeScript types / interfaces

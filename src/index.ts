@@ -377,7 +377,7 @@ program
   // Input Options Group
   .optionsGroup("Input Options:")
   .option("-p, --plugin <path>", "Path to plugin directory")
-  .option("-c, --config <path>", "Path to config file (default: seed.yaml)")
+  .option("-c, --config <path>", "Path to config file (default: config.yaml)")
   .option("--marketplace <path>", "Evaluate all plugins in marketplace")
   // Execution Mode Group (with v13.1 dual long flag aliases)
   .optionsGroup("Execution Mode:")
@@ -409,7 +409,7 @@ program
     try {
       const cliOptions = extractCLIOptions(options);
       const configPath =
-        typeof options["config"] === "string" ? options["config"] : "seed.yaml";
+        typeof options["config"] === "string" ? options["config"] : "config.yaml";
       const config = loadConfigWithOverrides(configPath, cliOptions);
 
       if (config.verbose) {

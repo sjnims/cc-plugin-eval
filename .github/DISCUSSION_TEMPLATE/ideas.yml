@@ -29,7 +29,7 @@ body:
         - New component type support
         - CLI commands or UX
         - Output / reporting formats
-        - Configuration options (seed.yaml)
+        - Configuration options (config.yaml)
         - Pipeline architecture
         - Documentation
         - Other
