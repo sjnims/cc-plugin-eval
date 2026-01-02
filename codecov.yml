@@ -44,67 +44,11 @@ coverage:
     - "**/*.d.ts" # TypeScript declaration files
 
 # =============================================================================
-# Flags
-# Group coverage by test type
-# =============================================================================
-flags:
-  unit:
-    paths:
-      - src/
-    carryforward: false
-
-# =============================================================================
-# Components
-# Track coverage per feature area with independent thresholds
-# =============================================================================
-component_management:
-  default_rules:
-    statuses:
-      - type: project
-        target: 70% # Default threshold for components
-
-  individual_components:
-    - component_id: stages-analysis
-      name: "Stage 1: Analysis"
-      paths:
-        - src/stages/1-analysis/**
-
-    - component_id: stages-generation
-      name: "Stage 2: Generation"
-      paths:
-        - src/stages/2-generation/**
-
-    - component_id: stages-execution
-      name: "Stage 3: Execution"
-      paths:
-        - src/stages/3-execution/**
-
-    - component_id: stages-evaluation
-      name: "Stage 4: Evaluation"
-      paths:
-        - src/stages/4-evaluation/**
-
-    - component_id: utils
-      name: Utilities
-      paths:
-        - src/utils/**
-
-    - component_id: config
-      name: Configuration
-      paths:
-        - src/config/**
-
-    - component_id: state
-      name: State Management
-      paths:
-        - src/state/**
-
-# =============================================================================
 # PR Comments
 # Configure how coverage is displayed in PR comments
 # =============================================================================
 comment:
-  layout: "header, diff, flags, components, footer"
+  layout: "header, diff, footer"
   behavior: default
   require_changes: true # Only comment if coverage changes
   require_base: true # Require base report for comparison
