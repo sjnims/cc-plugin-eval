@@ -6,8 +6,12 @@
  */
 
 import { DEFAULT_TUNING } from "../../config/defaults.js";
+import {
+  createSanitizer,
+  type SanitizerFunction,
+} from "../../utils/sanitizer.js";
 
-import type { ProgressCallbacks } from "../../types/index.js";
+import type { OutputConfig, ProgressCallbacks } from "../../types/index.js";
 
 /**
  * Default console progress reporter.
@@ -307,6 +311,130 @@ export function createStreamingReporter(
         type: "error",
         data: { scenario_id: scenario?.id, error: error.message },
       });
+    },
+  };
+}
+
+/**
+ * Create a sanitizer function from output config.
+ *
+ * @param outputConfig - Output configuration with sanitization settings
+ * @returns Configured sanitizer function
+ */
+function createSanitizerFromConfig(
+  outputConfig?: OutputConfig,
+): SanitizerFunction {
+  if (!outputConfig?.sanitize_logs) {
+    return (content: string) => content;
+  }
+
+  const sanitizationConfig = outputConfig.sanitization;
+  const customPatterns = sanitizationConfig?.custom_patterns?.map((p) => ({
+    name: "custom",
+    pattern: new RegExp(p.pattern, "g"),
+    replacement: p.replacement,
+  }));
+
+  // Only pass patterns if they exist to satisfy exactOptionalPropertyTypes
+  if (customPatterns && customPatterns.length > 0) {
+    return createSanitizer({
+      enabled: true,
+      patterns: customPatterns,
+      mergeWithDefaults: true,
+    });
+  }
+
+  return createSanitizer({ enabled: true });
+}
+
+/**
+ * Create a verbose progress reporter with PII sanitization.
+ *
+ * Wraps the standard verbose progress reporter with optional
+ * sanitization of logged prompts and outputs.
+ *
+ * @param outputConfig - Output configuration with sanitization settings
+ * @returns Progress callbacks with sanitization applied
+ *
+ * @example
+ * ```typescript
+ * const sanitizedProgress = createSanitizedVerboseProgress({
+ *   format: "json",
+ *   include_cli_summary: true,
+ *   junit_test_suite_name: "test",
+ *   sanitize_transcripts: false,
+ *   sanitize_logs: true,
+ * });
+ *
+ * const output = await runExecution(
+ *   analysis,
+ *   scenarios,
+ *   config,
+ *   sanitizedProgress
+ * );
+ * ```
+ */
+export function createSanitizedVerboseProgress(
+  outputConfig?: OutputConfig,
+): ProgressCallbacks {
+  const sanitize = createSanitizerFromConfig(outputConfig);
+
+  return {
+    onStageStart: (stage, total): void => {
+      console.log(`\n${"=".repeat(60)}`);
+      console.log(`STAGE: ${stage.toUpperCase()} (${String(total)} items)`);
+      console.log("=".repeat(60));
+    },
+
+    onStageComplete: (stage, durationMs, count): void => {
+      const durationSec = (durationMs / 1000).toFixed(1);
+      console.log(
+        `\n✅ ${stage} complete: ${String(count)} items in ${durationSec}s`,
+      );
+    },
+
+    onError: (error, scenario): void => {
+      const scenarioInfo = scenario ? ` in ${scenario.id}` : "";
+      console.error(`\n❌ Error${scenarioInfo}: ${error.message}`);
+    },
+
+    onScenarioStart: (scenario, index, total): void => {
+      console.log(
+        `\n[${String(index + 1)}/${String(total)}] Starting: ${scenario.id}`,
+      );
+      console.log(
+        `  Type: ${scenario.component_type} | Expected: ${scenario.expected_trigger ? "trigger" : "no trigger"}`,
+      );
+
+      // Truncate prompt if too long (limit from tuning config)
+      const maxPromptLen = DEFAULT_TUNING.limits.prompt_display_length;
+      const promptDisplay =
+        scenario.user_prompt.length > maxPromptLen
+          ? `${scenario.user_prompt.slice(0, maxPromptLen)}...`
+          : scenario.user_prompt;
+
+      // Sanitize the prompt before logging
+      console.log(`  Prompt: ${sanitize(promptDisplay)}`);
+    },
+
+    onScenarioComplete: (result, _index, _total): void => {
+      const status = result.errors.length > 0 ? "❌ FAILED" : "✅ PASSED";
+      console.log(
+        `  Result: ${status} | Cost: $${result.cost_usd.toFixed(4)} | Duration: ${String(result.api_duration_ms)}ms`,
+      );
+
+      if (result.detected_tools.length > 0) {
+        const toolNames = result.detected_tools.map((t) => t.name).join(", ");
+        console.log(`  Detected: ${toolNames}`);
+      }
+
+      if (result.permission_denials.length > 0) {
+        // Sanitize denial messages (may contain user input)
+        const sanitizedDenials = result.permission_denials
+          .map((d) => sanitize(d))
+          .join(", ");
+        console.log(`  Denials: ${sanitizedDenials}`);
+      }
     },
   };
 }

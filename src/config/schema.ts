@@ -156,12 +156,31 @@ export const EvaluationConfigSchema = z.object({
 export const OutputFormatSchema = z.enum(["json", "yaml", "junit-xml", "tap"]);
 
 /**
+ * Custom redaction pattern schema for config.yaml.
+ */
+export const CustomRedactionPatternSchema = z.object({
+  pattern: z.string().min(1, "Pattern is required"),
+  replacement: z.string().min(1, "Replacement is required"),
+});
+
+/**
+ * Sanitization configuration schema.
+ */
+export const SanitizationConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  custom_patterns: z.array(CustomRedactionPatternSchema).optional(),
+});
+
+/**
  * Output configuration schema.
  */
 export const OutputConfigSchema = z.object({
   format: OutputFormatSchema.default("json"),
   include_cli_summary: z.boolean().default(true),
   junit_test_suite_name: z.string().default("cc-plugin-eval"),
+  sanitize_transcripts: z.boolean().default(false),
+  sanitize_logs: z.boolean().default(false),
+  sanitization: SanitizationConfigSchema.optional(),
 });
 
 /**

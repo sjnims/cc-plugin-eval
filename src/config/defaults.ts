@@ -61,6 +61,8 @@ export const DEFAULT_OUTPUT = {
   format: "json" as const,
   include_cli_summary: true,
   junit_test_suite_name: "cc-plugin-eval",
+  sanitize_transcripts: false,
+  sanitize_logs: false,
 };
 
 /**

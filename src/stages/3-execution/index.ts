@@ -21,6 +21,10 @@ import {
 } from "../../utils/concurrency.js";
 import { ensureDir, getResultsDir, writeJson } from "../../utils/file-io.js";
 import { logger } from "../../utils/logging.js";
+import {
+  createSanitizer,
+  sanitizeTranscriptEvent,
+} from "../../utils/sanitizer.js";
 
 import {
   executeScenario,
@@ -281,6 +285,9 @@ async function executeAllScenarios(
 /**
  * Save transcripts to disk.
  *
+ * Optionally sanitizes PII from transcripts before saving when
+ * config.output.sanitize_transcripts is enabled.
+ *
  * @param pluginName - Plugin name for directory
  * @param results - Execution results
  * @param config - Evaluation configuration
@@ -288,27 +295,69 @@ async function executeAllScenarios(
 function saveTranscripts(
   pluginName: string,
   results: ExecutionResult[],
-  _config: EvalConfig,
+  config: EvalConfig,
 ): void {
   const transcriptsDir = getResultsDir(pluginName) + "/transcripts";
   ensureDir(transcriptsDir);
 
+  // Create sanitizer if transcript sanitization is enabled
+  const shouldSanitize = config.output.sanitize_transcripts;
+  let sanitizer: ReturnType<typeof createSanitizer> | undefined;
+
+  if (shouldSanitize) {
+    const customPatterns = config.output.sanitization?.custom_patterns?.map(
+      (p) => ({
+        name: "custom",
+        pattern: new RegExp(p.pattern, "g"),
+        replacement: p.replacement,
+      }),
+    );
+
+    // Only pass patterns if they exist to satisfy exactOptionalPropertyTypes
+    sanitizer =
+      customPatterns && customPatterns.length > 0
+        ? createSanitizer({
+            enabled: true,
+            patterns: customPatterns,
+            mergeWithDefaults: true,
+          })
+        : createSanitizer({ enabled: true });
+  }
+
   for (const result of results) {
+    // Sanitize transcript events if configured
+    const transcript =
+      shouldSanitize && sanitizer
+        ? {
+            ...result.transcript,
+            events: result.transcript.events.map((event) =>
+              sanitizeTranscriptEvent(event, sanitizer),
+            ),
+          }
+        : result.transcript;
+
+    // Sanitize permission denial messages (may contain user input)
+    const permissionDenials =
+      shouldSanitize && sanitizer
+        ? result.permission_denials.map((d) => sanitizer(d))
+        : result.permission_denials;
+
     const filename = `${transcriptsDir}/${result.scenario_id}.json`;
     writeJson(filename, {
       scenario_id: result.scenario_id,
-      transcript: result.transcript,
+      transcript,
       detected_tools: result.detected_tools,
       cost_usd: result.cost_usd,
       api_duration_ms: result.api_duration_ms,
       num_turns: result.num_turns,
-      permission_denials: result.permission_denials,
+      permission_denials: permissionDenials,
       errors: result.errors,
     });
   }
 
+  const sanitizeNote = shouldSanitize ? " (sanitized)" : "";
   logger.info(
-    `Saved ${String(results.length)} transcripts to ${transcriptsDir}`,
+    `Saved ${String(results.length)} transcripts${sanitizeNote} to ${transcriptsDir}`,
   );
 }
 
@@ -480,4 +529,5 @@ export {
   jsonProgress,
   createProgressReporter,
   createStreamingReporter,
+  createSanitizedVerboseProgress,
 } from "./progress-reporters.js";

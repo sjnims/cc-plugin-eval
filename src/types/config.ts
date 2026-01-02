@@ -108,6 +108,26 @@ export interface EvaluationConfig {
 export type OutputFormat = "json" | "yaml" | "junit-xml" | "tap";
 
 /**
+ * Custom redaction pattern for PII filtering.
+ */
+export interface CustomRedactionPattern {
+  /** Regex pattern string (will be compiled with 'g' flag) */
+  pattern: string;
+  /** Replacement string for matches */
+  replacement: string;
+}
+
+/**
+ * Sanitization configuration for PII filtering.
+ */
+export interface SanitizationConfig {
+  /** Enable/disable sanitization (default: false) */
+  enabled: boolean;
+  /** Custom redaction patterns to apply */
+  custom_patterns?: CustomRedactionPattern[];
+}
+
+/**
  * Output configuration.
  */
 export interface OutputConfig {
@@ -115,6 +135,12 @@ export interface OutputConfig {
   include_cli_summary: boolean;
   /** Suite name for JUnit XML output */
   junit_test_suite_name: string;
+  /** Sanitize transcript files before saving */
+  sanitize_transcripts: boolean;
+  /** Sanitize verbose/debug log output */
+  sanitize_logs: boolean;
+  /** Advanced sanitization settings */
+  sanitization?: SanitizationConfig;
 }
 
 /**
