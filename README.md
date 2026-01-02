@@ -188,6 +188,7 @@ execution:
   timeout_ms: 60000
   max_budget_usd: 10.0
   disallowed_tools: [Write, Edit, Bash] # Safety: block file operations
+  # requests_per_second: 2  # Optional: rate limit API calls
 
 # Evaluation settings
 evaluation:
@@ -196,7 +197,11 @@ evaluation:
   num_samples: 1 # Multi-sample judgment
 ```
 
-See the full [`config.yaml`](./config.yaml) for all options.
+See the full [`config.yaml`](./config.yaml) for all options, including:
+
+- **`tuning`**: Fine-tune timeouts, retry behavior, and token estimates for performance optimization
+- **`conflict_detection`**: Detect when multiple components trigger for the same prompt
+- **`batch_threshold`**: Use Anthropic Batches API for cost savings on large runs (50% discount)
 
 ## Output Structure
 
@@ -299,6 +304,13 @@ src/
 ├── state/                # Resume capability
 ├── types/                # TypeScript interfaces
 └── utils/                # Retry, concurrency, logging
+
+tests/
+├── unit/                 # Unit tests (mirror src/ structure)
+│   └── stages/           # Per-stage test files
+├── integration/          # Integration tests
+├── mocks/                # Mock implementations
+└── fixtures/             # Test data and mock plugins
 ```
 
 ## Roadmap
@@ -309,9 +321,15 @@ src/
 - [ ] Phase 4: Cross-plugin conflict detection
 - [ ] Phase 5: Marketplace evaluation
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and pull request guidelines.
+
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md) code of conduct.
+
 ## License
 
-MIT
+[MIT](LICENSE)
 
 ## Author
 

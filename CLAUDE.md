@@ -34,6 +34,9 @@ npx vitest run tests/unit/stages/1-analysis/skill-analyzer.test.ts
 
 # Run tests matching a pattern
 npx vitest run -t "SkillAnalyzer"
+
+# Clean build artifacts
+npm run clean              # Removes dist/ and coverage/
 ```
 
 ## Additional Linters
@@ -103,7 +106,14 @@ src/
 │   └── 4-evaluation/     # Programmatic detection, LLM judge, conflict tracking
 ├── state/                # Resume capability, checkpoint management
 ├── types/                # TypeScript interfaces
-└── utils/                # Retry, concurrency, logging, file I/O
+└── utils/                # Retry, concurrency, rate limiting, logging, sanitization
+
+tests/
+├── unit/                 # Unit tests (mirror src/ structure)
+│   └── stages/           # Per-stage test files
+├── integration/          # Integration tests
+├── mocks/                # Mock implementations for testing
+└── fixtures/             # Test data and mock plugins
 ```
 
 ### Detection Strategy
@@ -148,9 +158,12 @@ Main config is `config.yaml`. Key settings:
 
 - **Retry with exponential backoff** in `src/utils/retry.ts` for transient API errors
 - **Semaphore-based concurrency** in `src/utils/concurrency.ts` for parallel execution
+- **Rate limiter** via `createRateLimiter()` in `src/utils/concurrency.ts` for API call protection
+- **PII sanitizer** in `src/utils/sanitizer.ts` for redacting sensitive data from verbose logs
 - **Model pricing externalized** in `src/config/pricing.ts` for easy updates
 - **State checkpointing** after each stage enables resume on interruption
 - **Tool capture via PreToolUse hooks** during SDK execution for programmatic detection
+- **Symlink resolution** in plugin path validation for robust path handling
 
 ## Implementation Patterns
 
