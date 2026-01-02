@@ -128,7 +128,9 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: sjnims/cc-plugin-eval
           files: ./coverage/lcov.info
-          fail_ci_if_error: false
+          flags: unit
+          name: coverage-${{ github.run_id }}
+          fail_ci_if_error: true
           verbose: true
 
       - name: Upload test results to Codecov
@@ -139,7 +141,8 @@ jobs:
           slug: sjnims/cc-plugin-eval
           files: ./coverage/test-report.junit.xml
           report_type: test_results
-          fail_ci_if_error: false
+          name: test-results-${{ github.run_id }}
+          fail_ci_if_error: true
 
   build:
     name: Build
