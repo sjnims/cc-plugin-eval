@@ -14,7 +14,11 @@
  * Output: results/{plugin-name}/transcripts/
  */
 
-import { parallel, type ParallelResult } from "../../utils/concurrency.js";
+import {
+  createRateLimiter,
+  parallel,
+  type ParallelResult,
+} from "../../utils/concurrency.js";
 import { ensureDir, getResultsDir, writeJson } from "../../utils/file-io.js";
 import { logger } from "../../utils/logging.js";
 
@@ -227,20 +231,35 @@ async function executeAllScenarios(
     ? executeScenarioWithCheckpoint
     : executeScenario;
 
+  // Create rate limiter if configured (proactive rate limit protection)
+  const rps = config.execution.requests_per_second;
+  const rateLimiter =
+    rps !== null && rps !== undefined ? createRateLimiter(rps) : null;
+
+  if (rateLimiter) {
+    logger.info(`Rate limiting enabled: ${String(rps)} requests/second`);
+  }
+
   return parallel({
     items: scenarios,
     concurrency: config.max_concurrent,
     fn: async (scenario, index) => {
       progress?.onScenarioStart?.(scenario, index, scenarios.length);
 
-      const result = await executeFn({
-        scenario,
-        pluginPath,
-        pluginName,
-        config: config.execution,
-        additionalPlugins: config.execution.additional_plugins,
-        queryFn,
-      });
+      // Apply rate limiting if configured
+      const executeWithOptions = async (): Promise<ExecutionResult> =>
+        executeFn({
+          scenario,
+          pluginPath,
+          pluginName,
+          config: config.execution,
+          additionalPlugins: config.execution.additional_plugins,
+          queryFn,
+        });
+
+      const result = rateLimiter
+        ? await rateLimiter(executeWithOptions)
+        : await executeWithOptions();
 
       progress?.onScenarioComplete?.(result, index + 1, scenarios.length);
       logger.progress(
