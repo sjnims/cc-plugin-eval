@@ -199,9 +199,9 @@ evaluation:
 
 See the full [`config.yaml`](./config.yaml) for all options, including:
 
-- **`tuning`**: Fine-tune timeouts, retry behavior, and token estimates
+- **`tuning`**: Fine-tune timeouts, retry behavior, and token estimates for performance optimization
 - **`conflict_detection`**: Detect when multiple components trigger for the same prompt
-- **`batch_threshold`**: Use Anthropic Batches API for cost savings on large runs
+- **`batch_threshold`**: Use Anthropic Batches API for cost savings on large runs (50% discount)
 
 ## Output Structure
 
