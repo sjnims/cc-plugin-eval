@@ -123,6 +123,8 @@ export const ExecutionConfigSchema = z.object({
   disallowed_tools: z.array(z.string()).optional(),
   num_reps: z.number().int().min(1).max(10).default(1),
   additional_plugins: z.array(z.string()).default([]),
+  /** Rate limit API calls (requests per second). null = no limit. */
+  requests_per_second: z.number().min(0.1).max(100).nullish(),
 });
 
 /**

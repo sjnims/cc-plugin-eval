@@ -73,6 +73,8 @@ export interface ExecutionConfig {
   num_reps: number;
   /** Load alongside target plugin for conflict testing */
   additional_plugins: string[];
+  /** Rate limit API calls (requests per second). null/undefined = no limit. */
+  requests_per_second?: number | null;
 }
 
 /**

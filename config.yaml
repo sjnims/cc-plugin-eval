@@ -201,6 +201,18 @@ generation:
 #       - ["./other-plugin"] - Test alongside other plugin
 #       - ["plugin1", "plugin2"] - Test with multiple plugins
 #     Default: []
+#
+#   requests_per_second - Rate limit API calls to prevent 429 errors (optional)
+#     Possible values:
+#       - null - No rate limiting (default)
+#       - 0.5 - Very conservative (1 request per 2 seconds)
+#       - 1 - Conservative (1 request per second)
+#       - 2 - Moderate (recommended for safety)
+#       - 10 - Aggressive (for high-tier API accounts)
+#       - 100 - Maximum allowed
+#     Use case: Prevent rate limit errors during high-volume evaluations
+#     Note: Complements retry logic - proactive vs reactive rate limiting
+#     Default: null (disabled)
 execution:
   model: "claude-sonnet-4-20250514"
   max_turns: 5
@@ -215,6 +227,7 @@ execution:
     - Bash
   num_reps: 1
   additional_plugins: []
+  # requests_per_second: 2  # Uncomment to enable rate limiting
 
 # ==============================================================================
 # STAGE 4: EVALUATION - Detection and Judgment

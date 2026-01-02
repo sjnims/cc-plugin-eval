@@ -128,7 +128,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: sjnims/cc-plugin-eval
           files: ./coverage/lcov.info
-          flags: unit
           name: coverage-${{ github.run_id }}
           fail_ci_if_error: true
           verbose: true

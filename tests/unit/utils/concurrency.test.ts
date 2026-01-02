@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   batch,
+  createRateLimiter,
   parallel,
   parallelMap,
   sequential,
@@ -118,5 +119,75 @@ describe("batch", () => {
 
     expect(batches).toHaveLength(1);
     expect(batches[0]).toEqual([1, 2]);
+  });
+});
+
+describe("createRateLimiter", () => {
+  it("returns a function that wraps async functions", async () => {
+    const rateLimiter = createRateLimiter(10);
+    const fn = vi.fn().mockResolvedValue("result");
+
+    const result = await rateLimiter(fn);
+
+    expect(result).toBe("result");
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("enforces minimum interval between calls", async () => {
+    // 2 requests per second = 500ms minimum interval
+    const rateLimiter = createRateLimiter(2);
+    const timestamps: number[] = [];
+
+    const fn = vi.fn().mockImplementation(async () => {
+      timestamps.push(Date.now());
+      return "done";
+    });
+
+    // Make 3 rapid calls sequentially
+    await rateLimiter(fn);
+    await rateLimiter(fn);
+    await rateLimiter(fn);
+
+    expect(timestamps).toHaveLength(3);
+
+    // Check intervals (allowing 50ms tolerance for timing)
+    const interval1 = timestamps[1]! - timestamps[0]!;
+    const interval2 = timestamps[2]! - timestamps[1]!;
+
+    expect(interval1).toBeGreaterThanOrEqual(450); // 500ms - 50ms tolerance
+    expect(interval2).toBeGreaterThanOrEqual(450);
+  });
+
+  it("allows immediate execution when enough time has passed", async () => {
+    // High RPS means short interval
+    const rateLimiter = createRateLimiter(100); // 10ms interval
+    const fn = vi.fn().mockResolvedValue("fast");
+
+    const start = Date.now();
+    await rateLimiter(fn);
+    const end = Date.now();
+
+    // First call should be nearly immediate
+    expect(end - start).toBeLessThan(50);
+  });
+
+  it("propagates errors from wrapped function", async () => {
+    const rateLimiter = createRateLimiter(10);
+    const error = new Error("Test error");
+    const fn = vi.fn().mockRejectedValue(error);
+
+    await expect(rateLimiter(fn)).rejects.toThrow("Test error");
+  });
+
+  it("handles different return types", async () => {
+    const rateLimiter = createRateLimiter(10);
+
+    const numberFn = vi.fn().mockResolvedValue(42);
+    const objectFn = vi.fn().mockResolvedValue({ key: "value" });
+    const arrayFn = vi.fn().mockResolvedValue([1, 2, 3]);
+
+    expect(await rateLimiter(numberFn)).toBe(42);
+    expect(await rateLimiter(objectFn)).toEqual({ key: "value" });
+    expect(await rateLimiter(arrayFn)).toEqual([1, 2, 3]);
   });
 });
