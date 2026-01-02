@@ -960,4 +960,115 @@ describe("runEvaluation", () => {
       expect(output.results[0]?.detection_source).toBe("llm");
     });
   });
+
+  describe("multi-sampling variance tracking", () => {
+    it("should propagate variance from runJudgment to multi_sample_stats", async () => {
+      // Mock runJudgment to return varying scores with non-zero variance
+      (runJudgment as Mock).mockResolvedValue(
+        createMultiSampleResult({
+          individual_scores: [6, 8, 10],
+          aggregated_score: 8,
+          score_variance: 2.67, // Variance of [6, 8, 10]
+        }),
+      );
+
+      const scenarios = [createScenario({ id: "s1" })];
+      const executions = [createExecutionResult({ scenario_id: "s1" })];
+      const config = createConfig({
+        evaluation: {
+          ...createConfig().evaluation,
+          num_samples: 3,
+        },
+      });
+
+      const output = await runEvaluation(
+        "test-plugin",
+        scenarios,
+        executions,
+        config,
+      );
+
+      expect(output.metrics.multi_sample_stats).toBeDefined();
+      expect(output.metrics.multi_sample_stats?.avg_score_variance).toBeCloseTo(
+        2.67,
+      );
+      expect(output.metrics.multi_sample_stats?.samples_per_scenario).toBe(3);
+    });
+
+    it("should identify high variance scenarios", async () => {
+      // First scenario has high variance, second has low variance
+      let callCount = 0;
+      (runJudgment as Mock).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(
+            createMultiSampleResult({
+              individual_scores: [3, 8, 10],
+              aggregated_score: 7,
+              score_variance: 8.67, // High variance
+            }),
+          );
+        }
+        return Promise.resolve(
+          createMultiSampleResult({
+            individual_scores: [7, 8, 8],
+            aggregated_score: 7.67,
+            score_variance: 0.22, // Low variance
+          }),
+        );
+      });
+
+      const scenarios = [
+        createScenario({ id: "s1" }),
+        createScenario({ id: "s2" }),
+      ];
+      const executions = [
+        createExecutionResult({ scenario_id: "s1" }),
+        createExecutionResult({ scenario_id: "s2" }),
+      ];
+      const config = createConfig({
+        evaluation: {
+          ...createConfig().evaluation,
+          num_samples: 3,
+        },
+      });
+
+      const output = await runEvaluation(
+        "test-plugin",
+        scenarios,
+        executions,
+        config,
+      );
+
+      expect(output.metrics.multi_sample_stats).toBeDefined();
+      expect(
+        output.metrics.multi_sample_stats?.high_variance_scenarios,
+      ).toContain("s1");
+      expect(
+        output.metrics.multi_sample_stats?.high_variance_scenarios,
+      ).not.toContain("s2");
+    });
+
+    it("should not include multi_sample_stats when num_samples is 1", async () => {
+      (runJudgment as Mock).mockResolvedValue(createMultiSampleResult());
+
+      const scenarios = [createScenario()];
+      const executions = [createExecutionResult()];
+      const config = createConfig({
+        evaluation: {
+          ...createConfig().evaluation,
+          num_samples: 1,
+        },
+      });
+
+      const output = await runEvaluation(
+        "test-plugin",
+        scenarios,
+        executions,
+        config,
+      );
+
+      expect(output.metrics.multi_sample_stats).toBeUndefined();
+    });
+  });
 });

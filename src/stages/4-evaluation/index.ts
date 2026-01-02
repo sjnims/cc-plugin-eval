@@ -72,6 +72,15 @@ interface JudgeStrategy {
 }
 
 /**
+ * Result from evaluating a single scenario.
+ * Includes both the evaluation result and variance for metrics.
+ */
+interface ScenarioEvaluationResult {
+  result: EvaluationResult;
+  variance: number;
+}
+
+/**
  * Determine whether LLM judge should be used.
  *
  * @param scenario - Test scenario
@@ -159,13 +168,13 @@ function buildEvaluationResult(
  * @param client - Anthropic client
  * @param context - Evaluation context
  * @param config - Evaluation configuration
- * @returns Evaluation result
+ * @returns Evaluation result with variance for metrics
  */
 async function evaluateScenario(
   client: Anthropic,
   context: EvaluationContext,
   config: EvalConfig,
-): Promise<EvaluationResult> {
+): Promise<ScenarioEvaluationResult> {
   const { scenario, execution } = context;
   const evalConfig = config.evaluation;
 
@@ -226,8 +235,8 @@ async function evaluateScenario(
     }
   }
 
-  // 5. Build and return evaluation result
-  return buildEvaluationResult(
+  // 5. Build and return evaluation result with variance
+  const result = buildEvaluationResult(
     scenario,
     triggered,
     uniqueDetections,
@@ -235,6 +244,11 @@ async function evaluateScenario(
     judgment,
     detectionSource,
   );
+
+  // Extract variance from judgment (0 for single sample or no judgment)
+  const variance = judgment?.score_variance ?? 0;
+
+  return { result, variance };
 }
 
 /**
@@ -320,17 +334,24 @@ export async function runEvaluation(
   }[] = [];
 
   // Evaluate all scenarios in parallel
-  const parallelResult = await parallel<EvaluationContext, EvaluationResult>({
+  const parallelResult = await parallel<
+    EvaluationContext,
+    ScenarioEvaluationResult
+  >({
     items: contexts,
     concurrency: config.max_concurrent,
     fn: async (context: EvaluationContext, index: number) => {
-      const result = await evaluateScenario(client, context, config);
+      const { result, variance } = await evaluateScenario(
+        client,
+        context,
+        config,
+      );
 
       // Track sample data if using multi-sampling
       if (config.evaluation.num_samples > 1) {
         sampleData.push({
           scenarioId: result.scenario_id,
-          variance: 0, // Would need to track from runJudgment
+          variance,
           numSamples: config.evaluation.num_samples,
         });
       }
@@ -342,7 +363,7 @@ export async function runEvaluation(
         contexts.length,
         `${result.scenario_id}: ${result.triggered ? "triggered" : "not triggered"}`,
       );
-      return result;
+      return { result, variance };
     },
     onError: (error: Error, context: EvaluationContext) => {
       progress.onError?.(error, context.scenario);
@@ -355,8 +376,10 @@ export async function runEvaluation(
 
   // Filter valid results (parallel may return undefined for failed items)
   const results = (
-    parallelResult.results as (EvaluationResult | undefined)[]
-  ).filter((r): r is EvaluationResult => r !== undefined);
+    parallelResult.results as (ScenarioEvaluationResult | undefined)[]
+  )
+    .filter((r): r is ScenarioEvaluationResult => r !== undefined)
+    .map((r) => r.result);
 
   // Build results with context for metrics
   const resultsWithContext = results.map((result) => {
