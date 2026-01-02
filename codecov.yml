@@ -14,7 +14,7 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "65...100" # Matches vitest.config.ts thresholds
+  range: "65...100" # Lower bound matches vitest branches threshold (65%)
 
   # ---------------------------------------------------------------------------
   # Status Checks
