@@ -97,6 +97,7 @@ export interface ResolvedPaths {
 export interface PreflightError {
   code:
     | "PATH_NOT_FOUND"
+    | "PATH_RESOLUTION_FAILED"
     | "MANIFEST_NOT_FOUND"
     | "MANIFEST_PARSE_ERROR"
     | "MANIFEST_INVALID";
@@ -118,6 +119,7 @@ export interface PreflightWarning {
 export interface PreflightResult {
   valid: boolean;
   pluginPath: string;
+  resolvedPath: string;
   manifestPath: string;
   pluginName: string | null;
   errors: PreflightError[];

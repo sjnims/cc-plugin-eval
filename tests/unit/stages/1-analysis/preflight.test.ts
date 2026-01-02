@@ -1,6 +1,8 @@
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   formatPreflightResult,
@@ -77,5 +79,79 @@ describe("formatPreflightResult", () => {
     expect(formatted).toContain("❌");
     expect(formatted).toContain("PATH_NOT_FOUND");
     expect(formatted).toContain("💡");
+  });
+});
+
+describe("preflightCheck symlink handling", () => {
+  let tempDir: string;
+  let symlinkPath: string;
+
+  beforeEach(() => {
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "preflight-symlink-test-"));
+    symlinkPath = path.join(tempDir, "symlink-plugin");
+  });
+
+  afterEach(() => {
+    // Clean up symlink and temp dir
+    if (fs.existsSync(symlinkPath)) {
+      fs.unlinkSync(symlinkPath);
+    }
+    if (fs.existsSync(tempDir)) {
+      fs.rmSync(tempDir, { recursive: true });
+    }
+  });
+
+  it("resolves symlinks and includes resolved path in result", () => {
+    // Create symlink to valid plugin
+    const targetPath = path.join(fixturesPath, "valid-plugin");
+    fs.symlinkSync(targetPath, symlinkPath);
+
+    const result = preflightCheck(symlinkPath);
+
+    expect(result.valid).toBe(true);
+    expect(result.pluginPath).toBe(path.resolve(symlinkPath));
+    expect(result.resolvedPath).toBe(fs.realpathSync(symlinkPath));
+    expect(result.resolvedPath).not.toBe(result.pluginPath);
+  });
+
+  it("adds warning when symlink is followed", () => {
+    // Create symlink to valid plugin
+    const targetPath = path.join(fixturesPath, "valid-plugin");
+    fs.symlinkSync(targetPath, symlinkPath);
+
+    const result = preflightCheck(symlinkPath);
+
+    expect(result.valid).toBe(true);
+    const symlinkWarning = result.warnings.find(
+      (w) => w.code === "SYMLINK_RESOLVED",
+    );
+    expect(symlinkWarning).toBeDefined();
+    expect(symlinkWarning?.message).toContain("->");
+  });
+
+  it("fails for broken symlinks", () => {
+    // Create symlink to non-existent path
+    fs.symlinkSync("/non/existent/target", symlinkPath);
+
+    const result = preflightCheck(symlinkPath);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.code === "PATH_NOT_FOUND")).toBe(true);
+  });
+
+  it("sets resolvedPath equal to pluginPath for non-symlink paths", () => {
+    const result = preflightCheck(path.join(fixturesPath, "valid-plugin"));
+
+    expect(result.valid).toBe(true);
+    expect(result.pluginPath).toBe(result.resolvedPath);
+  });
+
+  it("no symlink warning for non-symlink paths", () => {
+    const result = preflightCheck(path.join(fixturesPath, "valid-plugin"));
+
+    const symlinkWarning = result.warnings.find(
+      (w) => w.code === "SYMLINK_RESOLVED",
+    );
+    expect(symlinkWarning).toBeUndefined();
   });
 });

@@ -3,7 +3,7 @@
  * Catches errors before SDK initialization with actionable suggestions.
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 
 import type {
@@ -27,6 +27,7 @@ export function preflightCheck(pluginPath: string): PreflightResult {
   let pluginName: string | null = null;
 
   const absolutePath = path.resolve(pluginPath);
+  let resolvedPath = absolutePath;
   const manifestPath = path.join(absolutePath, ".claude-plugin", "plugin.json");
 
   // 1. Verify plugin path exists
@@ -40,6 +41,7 @@ export function preflightCheck(pluginPath: string): PreflightResult {
     return {
       valid: false,
       pluginPath: absolutePath,
+      resolvedPath,
       manifestPath,
       pluginName,
       errors,
@@ -47,28 +49,63 @@ export function preflightCheck(pluginPath: string): PreflightResult {
     };
   }
 
-  // 2. Verify plugin.json exists
-  if (!existsSync(manifestPath)) {
+  // 2. Resolve symlinks and warn if path is a symlink
+  try {
+    const stats = lstatSync(absolutePath);
+    if (stats.isSymbolicLink()) {
+      resolvedPath = realpathSync(absolutePath);
+      warnings.push({
+        code: "SYMLINK_RESOLVED",
+        message: `Plugin path is a symlink: ${absolutePath} -> ${resolvedPath}`,
+      });
+    }
+  } catch (err) {
+    errors.push({
+      code: "PATH_RESOLUTION_FAILED",
+      message: `Could not resolve real path: ${err instanceof Error ? err.message : String(err)}`,
+      suggestion: "Check that the symlink target exists and is accessible.",
+    });
+    return {
+      valid: false,
+      pluginPath: absolutePath,
+      resolvedPath,
+      manifestPath,
+      pluginName,
+      errors,
+      warnings,
+    };
+  }
+
+  // Use resolved path for remaining checks
+  const resolvedManifestPath = path.join(
+    resolvedPath,
+    ".claude-plugin",
+    "plugin.json",
+  );
+
+  // 3. Verify plugin.json exists
+  if (!existsSync(resolvedManifestPath)) {
     errors.push({
       code: "MANIFEST_NOT_FOUND",
-      message: `Plugin manifest not found: ${manifestPath}`,
+      message: `Plugin manifest not found: ${resolvedManifestPath}`,
       suggestion:
         'Create .claude-plugin/plugin.json with at minimum: { "name": "your-plugin-name" }',
     });
     return {
       valid: false,
       pluginPath: absolutePath,
-      manifestPath,
+      resolvedPath,
+      manifestPath: resolvedManifestPath,
       pluginName,
       errors,
       warnings,
     };
   }
 
-  // 3. Verify manifest is valid JSON
+  // 4. Verify manifest is valid JSON
   let manifest: Record<string, unknown>;
   try {
-    const content = readFileSync(manifestPath, "utf-8");
+    const content = readFileSync(resolvedManifestPath, "utf-8");
     manifest = JSON.parse(content) as Record<string, unknown>;
   } catch (err) {
     errors.push({
@@ -80,14 +117,15 @@ export function preflightCheck(pluginPath: string): PreflightResult {
     return {
       valid: false,
       pluginPath: absolutePath,
-      manifestPath,
+      resolvedPath,
+      manifestPath: resolvedManifestPath,
       pluginName,
       errors,
       warnings,
     };
   }
 
-  // 4. Validate required fields
+  // 5. Validate required fields
   if (typeof manifest["name"] !== "string" || !manifest["name"]) {
     errors.push({
       code: "MANIFEST_INVALID",
@@ -106,10 +144,10 @@ export function preflightCheck(pluginPath: string): PreflightResult {
     }
   }
 
-  // 5. Check for common component directories
+  // 6. Check for common component directories
   const expectedDirs = ["skills", "agents", "commands"];
   const existingDirs = expectedDirs.filter((dir) =>
-    existsSync(path.join(absolutePath, dir)),
+    existsSync(path.join(resolvedPath, dir)),
   );
 
   if (existingDirs.length === 0) {
@@ -123,7 +161,8 @@ export function preflightCheck(pluginPath: string): PreflightResult {
   return {
     valid: errors.length === 0,
     pluginPath: absolutePath,
-    manifestPath,
+    resolvedPath,
+    manifestPath: resolvedManifestPath,
     pluginName,
     errors,
     warnings,
