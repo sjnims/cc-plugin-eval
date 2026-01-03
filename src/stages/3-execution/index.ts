@@ -24,6 +24,7 @@ import { logger } from "../../utils/logging.js";
 import {
   createSanitizer,
   sanitizeTranscriptEvent,
+  validateRegexPattern,
 } from "../../utils/sanitizer.js";
 
 import {
@@ -306,9 +307,12 @@ function saveTranscripts(
 
   if (shouldSanitize) {
     const customPatterns = config.output.sanitization?.custom_patterns?.map(
-      (p) => ({
-        name: "custom",
-        pattern: new RegExp(p.pattern, "g"),
+      (p, index) => ({
+        name: `custom_${String(index)}`,
+        pattern: validateRegexPattern(
+          p.pattern,
+          `custom_patterns[${String(index)}]`,
+        ),
         replacement: p.replacement,
       }),
     );

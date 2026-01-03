@@ -7,6 +7,8 @@
  * @module
  */
 
+import { ConfigLoadError } from "../config/loader.js";
+
 import type {
   AssistantEvent,
   ToolResultEvent,
@@ -125,6 +127,42 @@ export const DEFAULT_REDACTION_PATTERNS: RedactionPattern[] = [
     replacement: "[REDACTED_CARD]",
   },
 ];
+
+/**
+ * Validate and compile a regex pattern string.
+ *
+ * Validates that the pattern is syntactically correct and compiles it
+ * with the global flag. Throws a descriptive error if the pattern is invalid.
+ *
+ * Note: Does not currently detect ReDoS-vulnerable patterns (catastrophic
+ * backtracking). Consider adding safe-regex library if patterns become
+ * user-controlled or if ReDoS becomes a concern.
+ *
+ * @param pattern - The regex pattern string to validate and compile
+ * @param name - Human-readable name for the pattern (used in error messages)
+ * @returns Compiled RegExp with 'g' flag
+ * @throws ConfigLoadError if the pattern has invalid regex syntax
+ *
+ * @example
+ * ```typescript
+ * // Valid pattern
+ * const regex = validateRegexPattern("INTERNAL-\\w+", "internal_id");
+ * console.log(regex.test("INTERNAL-abc123")); // true
+ *
+ * // Invalid pattern throws
+ * validateRegexPattern("[invalid(", "broken"); // throws ConfigLoadError
+ * ```
+ */
+export function validateRegexPattern(pattern: string, name: string): RegExp {
+  try {
+    return new RegExp(pattern, "g");
+  } catch (error) {
+    throw new ConfigLoadError(
+      `Invalid regex pattern "${name}": ${error instanceof Error ? error.message : String(error)}`,
+      error instanceof Error ? error : undefined,
+    );
+  }
+}
 
 /**
  * Create a sanitizer function with the specified options.
