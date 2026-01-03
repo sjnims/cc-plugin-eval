@@ -377,3 +377,69 @@ describe("sanitizeTranscriptEvent", () => {
     expect(result).not.toBe(unknownEvent); // Verify it's a new object
   });
 });
+
+describe("validateRegexPattern", () => {
+  // Import will be added once function is implemented
+  // This is expected to fail initially (TDD)
+
+  it("returns compiled RegExp for valid pattern", async () => {
+    const { validateRegexPattern } =
+      await import("../../../src/utils/sanitizer.js");
+    const result = validateRegexPattern("test-\\d+", "test_pattern");
+    expect(result).toBeInstanceOf(RegExp);
+    expect(result.flags).toBe("g");
+    expect(result.test("test-123")).toBe(true);
+  });
+
+  it("returns compiled RegExp for complex but valid pattern", async () => {
+    const { validateRegexPattern } =
+      await import("../../../src/utils/sanitizer.js");
+    const result = validateRegexPattern(
+      "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+      "email_pattern",
+    );
+    expect(result).toBeInstanceOf(RegExp);
+  });
+
+  it("throws ConfigLoadError for invalid regex syntax", async () => {
+    const { validateRegexPattern } =
+      await import("../../../src/utils/sanitizer.js");
+    expect(() => validateRegexPattern("[invalid(", "broken_pattern")).toThrow();
+  });
+
+  it("includes pattern name in error message", async () => {
+    const { validateRegexPattern } =
+      await import("../../../src/utils/sanitizer.js");
+    expect(() =>
+      validateRegexPattern("[invalid(", "my_custom_pattern"),
+    ).toThrow(/my_custom_pattern/);
+  });
+
+  it("includes original error message in thrown error", async () => {
+    const { validateRegexPattern } =
+      await import("../../../src/utils/sanitizer.js");
+    try {
+      validateRegexPattern("[invalid(", "test");
+      expect.fail("Should have thrown");
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toMatch(/Invalid/i);
+    }
+  });
+
+  it("handles empty pattern string", async () => {
+    const { validateRegexPattern } =
+      await import("../../../src/utils/sanitizer.js");
+    // Empty pattern is technically valid regex (matches empty string)
+    const result = validateRegexPattern("", "empty_pattern");
+    expect(result).toBeInstanceOf(RegExp);
+  });
+
+  it("handles pattern with special regex characters", async () => {
+    const { validateRegexPattern } =
+      await import("../../../src/utils/sanitizer.js");
+    const result = validateRegexPattern("\\$\\d+\\.\\d{2}", "currency");
+    expect(result).toBeInstanceOf(RegExp);
+    expect(result.test("$19.99")).toBe(true);
+  });
+});
