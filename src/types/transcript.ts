@@ -14,6 +14,25 @@ export interface ToolCapture {
 }
 
 /**
+ * Hook response captured during execution.
+ * Corresponds to SDKHookResponseMessage from Agent SDK.
+ */
+export interface HookResponseCapture {
+  /** Name of the hook that fired */
+  hookName: string;
+  /** Event type (PreToolUse, PostToolUse, Stop, etc.) */
+  hookEvent: string;
+  /** Hook stdout output */
+  stdout: string;
+  /** Hook stderr output */
+  stderr: string;
+  /** Exit code for command hooks */
+  exitCode?: number | undefined;
+  /** Capture timestamp */
+  timestamp: number;
+}
+
+/**
  * Transcript metadata.
  */
 export interface TranscriptMetadata {
@@ -122,4 +141,6 @@ export interface ExecutionResult {
   permission_denials: string[];
   /** Track errors */
   errors: TranscriptErrorEvent[];
+  /** Captured hook responses from SDK messages */
+  hook_responses?: HookResponseCapture[];
 }

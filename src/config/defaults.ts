@@ -89,6 +89,7 @@ export const DEFAULT_TUNING: TuningConfig = {
     per_skill: 600,
     per_agent: 800,
     per_command: 300,
+    per_hook: 400,
     semantic_gen_max_tokens: 1000,
   },
   limits: {

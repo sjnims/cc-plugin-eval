@@ -42,6 +42,7 @@ export const TOKENS_PER_SCENARIO: Record<ComponentType, number> = {
   skill: DEFAULT_TUNING.token_estimates.per_skill,
   agent: DEFAULT_TUNING.token_estimates.per_agent,
   command: DEFAULT_TUNING.token_estimates.per_command,
+  hook: DEFAULT_TUNING.token_estimates.per_hook,
 };
 
 /**

@@ -212,6 +212,7 @@ export interface TokenEstimatesConfig {
   per_skill: number;
   per_agent: number;
   per_command: number;
+  per_hook: number;
   semantic_gen_max_tokens: number;
 }
 

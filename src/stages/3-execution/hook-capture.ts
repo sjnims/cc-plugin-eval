@@ -5,7 +5,7 @@
  * scenario execution for programmatic detection in Stage 4.
  */
 
-import type { ToolCapture } from "../../types/index.js";
+import type { HookResponseCapture, ToolCapture } from "../../types/index.js";
 
 /**
  * PreToolUse hook input type.
@@ -305,4 +305,140 @@ export function analyzeCaptures(captures: ToolCapture[]): {
   }
 
   return result;
+}
+
+/**
+ * Hook response collector.
+ * Collects hook responses from SDK messages during execution.
+ */
+export interface HookResponseCollector {
+  /** Captured hook responses */
+  responses: HookResponseCapture[];
+  /** Process an SDK message to extract hook responses */
+  processMessage: (message: unknown) => void;
+  /** Clear all captured responses */
+  clear: () => void;
+}
+
+/**
+ * Create a hook response collector.
+ *
+ * This collector processes SDK messages and extracts hook response messages
+ * (SDKHookResponseMessage) for programmatic detection of hook activation.
+ *
+ * @returns Hook response collector
+ *
+ * @example
+ * ```typescript
+ * const collector = createHookResponseCollector();
+ *
+ * // Process each SDK message during execution
+ * for await (const message of query) {
+ *   collector.processMessage(message);
+ *   // ... handle other message types
+ * }
+ *
+ * // Access captured hook responses
+ * console.log(collector.responses);
+ * ```
+ */
+export function createHookResponseCollector(): HookResponseCollector {
+  const responses: HookResponseCapture[] = [];
+
+  const processMessage = (message: unknown): void => {
+    // Check if message is an SDKHookResponseMessage
+    if (!isHookResponseMessage(message)) {
+      return;
+    }
+
+    responses.push({
+      hookName: message.hook_name,
+      hookEvent: message.hook_event,
+      stdout: message.stdout,
+      stderr: message.stderr,
+      exitCode: message.exit_code,
+      timestamp: Date.now(),
+    });
+  };
+
+  const clear = (): void => {
+    responses.length = 0;
+  };
+
+  return {
+    responses,
+    processMessage,
+    clear,
+  };
+}
+
+/**
+ * SDK hook response message structure.
+ * Matches the SDKHookResponseMessage type from Agent SDK.
+ */
+interface SDKHookResponseMessage {
+  type: "system";
+  subtype: "hook_response";
+  hook_name: string;
+  hook_event: string;
+  stdout: string;
+  stderr: string;
+  exit_code?: number;
+}
+
+/**
+ * Type guard for SDKHookResponseMessage.
+ *
+ * @param message - SDK message to check
+ * @returns True if message is a hook response
+ */
+function isHookResponseMessage(
+  message: unknown,
+): message is SDKHookResponseMessage {
+  if (typeof message !== "object" || message === null) {
+    return false;
+  }
+
+  const msg = message as Record<string, unknown>;
+
+  return (
+    msg["type"] === "system" &&
+    msg["subtype"] === "hook_response" &&
+    typeof msg["hook_name"] === "string" &&
+    typeof msg["hook_event"] === "string" &&
+    typeof msg["stdout"] === "string" &&
+    typeof msg["stderr"] === "string"
+  );
+}
+
+/**
+ * Analyze hook responses to identify triggered hooks.
+ *
+ * @param responses - Hook response captures from execution
+ * @param expectedHookName - Optional hook name to filter by
+ * @returns Matching hook responses
+ */
+export function analyzeHookResponses(
+  responses: HookResponseCapture[],
+  expectedHookName?: string,
+): HookResponseCapture[] {
+  if (!expectedHookName) {
+    return responses;
+  }
+
+  // Match by exact name or pattern
+  return responses.filter((r) => {
+    // Exact match
+    if (r.hookName === expectedHookName) {
+      return true;
+    }
+
+    // Pattern match (hook name may include event type)
+    if (expectedHookName.includes(":")) {
+      const [eventType, matcher] = expectedHookName.split(":");
+      return r.hookEvent === eventType && r.hookName.includes(matcher ?? "");
+    }
+
+    return false;
+  });
 }

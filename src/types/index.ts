@@ -23,6 +23,12 @@ export type {
   AgentExample,
   AgentComponent,
   CommandComponent,
+  HookType,
+  HookEventType,
+  HookExpectedBehavior,
+  HookAction,
+  HookEventHandler,
+  HookComponent,
 } from "./components.js";
 
 // Scenario types
@@ -40,6 +46,7 @@ export type {
 // Transcript types
 export type {
   ToolCapture,
+  HookResponseCapture,
   TranscriptMetadata,
   UserEvent,
   ToolCall,

@@ -84,3 +84,83 @@ export interface CommandComponent {
   allowed_tools?: string[] | undefined;
   disable_model_invocation: boolean;
 }
+
+/**
+ * Hook type: command-based or prompt-based.
+ */
+export type HookType = "command" | "prompt";
+
+/**
+ * Supported hook event types.
+ * Based on Claude Agent SDK HOOK_EVENTS constant.
+ */
+export type HookEventType =
+  | "PreToolUse"
+  | "PostToolUse"
+  | "PostToolUseFailure"
+  | "PermissionRequest"
+  | "Stop"
+  | "SubagentStart"
+  | "SubagentStop"
+  | "UserPromptSubmit"
+  | "SessionStart"
+  | "SessionEnd"
+  | "PreCompact"
+  | "Notification";
+
+/**
+ * Expected behavior of a hook.
+ */
+export type HookExpectedBehavior =
+  | "block"
+  | "allow"
+  | "modify"
+  | "log"
+  | "context"
+  | "unknown";
+
+/**
+ * Individual hook action within an event handler.
+ */
+export interface HookAction {
+  type: HookType;
+  /** For command hooks: the shell command to execute */
+  command?: string | undefined;
+  /** For prompt hooks: the LLM prompt to evaluate */
+  prompt?: string | undefined;
+  /** Timeout in seconds */
+  timeout?: number | undefined;
+}
+
+/**
+ * Hook event handler with matcher and actions.
+ */
+export interface HookEventHandler {
+  /** Tool name pattern (regex, glob, or exact match) */
+  matcher: string;
+  /** Array of hooks to execute when matcher triggers */
+  hooks: HookAction[];
+}
+
+/**
+ * Parsed hook component from hooks.json.
+ * Each matcher within an event type becomes a separate HookComponent.
+ */
+export interface HookComponent {
+  /** Unique identifier: event_matcher pattern */
+  name: string;
+  /** Path to hooks.json */
+  path: string;
+  /** Event type (PreToolUse, PostToolUse, Stop, etc.) */
+  eventType: HookEventType;
+  /** Tool matcher pattern */
+  matcher: string;
+  /** Inferred expected behavior from hook content */
+  expectedBehavior: HookExpectedBehavior;
+  /** Description derived from hook prompt/command */
+  description: string;
+  /** The hook actions to execute */
+  actions: HookAction[];
+  /** Tools that would trigger this hook (parsed from matcher) */
+  matchingTools: string[];
+}

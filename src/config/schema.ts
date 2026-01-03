@@ -34,6 +34,7 @@ export const TokenEstimatesConfigSchema = z.object({
   per_skill: z.number().int().min(100).max(2000).default(600),
   per_agent: z.number().int().min(100).max(3000).default(800),
   per_command: z.number().int().min(50).max(1000).default(300),
+  per_hook: z.number().int().min(50).max(1000).default(400),
   semantic_gen_max_tokens: z.number().int().min(500).max(4000).default(1000),
 });
 
