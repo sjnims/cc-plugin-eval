@@ -12,6 +12,7 @@
  * 5. Semantic similarity (synonyms/related phrases)
  */
 
+import { logger } from "../../utils/logging.js";
 import { withRetry } from "../../utils/retry.js";
 
 import { resolveModelId } from "./cost-estimator.js";
@@ -146,7 +147,7 @@ export function parseSkillScenarioResponse(
     });
   } catch (error) {
     // Return empty array on parse failure - caller should handle
-    console.error(`Failed to parse skill scenarios for ${skill.name}:`, error);
+    logger.error(`Failed to parse skill scenarios for ${skill.name}:`, error);
     return [];
   }
 }

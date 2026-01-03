@@ -27,6 +27,18 @@ vi.mock("../../../../src/utils/retry.js", () => ({
   withRetry: vi.fn((fn: () => Promise<unknown>) => fn()),
 }));
 
+// Mock the logger utility
+vi.mock("../../../../src/utils/logging.js", () => ({
+  logger: {
+    error: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
+import { logger } from "../../../../src/utils/logging.js";
+
 describe("buildSkillPrompt", () => {
   const skill: SkillComponent = {
     name: "hook-development",
@@ -185,18 +197,15 @@ describe("parseSkillScenarioResponse", () => {
     expect(scenarios[0].semantic_variation_type).toBe("synonym");
   });
 
-  it("should return empty array for invalid JSON", () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(vi.fn());
-
+  it("should return empty array for invalid JSON and log error via logger", () => {
     const response = "Not valid JSON at all";
     const scenarios = parseSkillScenarioResponse(response, skill);
 
     expect(scenarios).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalledWith(
+    expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining("Failed to parse skill scenarios"),
       expect.any(SyntaxError),
     );
-    consoleSpy.mockRestore();
   });
 
   it("should parse multiple scenario types", () => {

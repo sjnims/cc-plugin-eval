@@ -7,6 +7,7 @@
  */
 
 import { DEFAULT_TUNING } from "../../config/defaults.js";
+import { getModelPricing } from "../../config/pricing.js";
 import { logger } from "../../utils/logging.js";
 import { withRetry } from "../../utils/retry.js";
 
@@ -439,15 +440,14 @@ export function estimateExecutionCost(
   const outputTokensPerScenario =
     DEFAULT_TUNING.token_estimates.output_per_turn * config.max_turns;
 
-  // Price per 1M tokens (Sonnet 4)
-  const inputPrice = 3.0; // $3 per 1M input tokens
-  const outputPrice = 15.0; // $15 per 1M output tokens
+  // Get pricing from centralized config
+  const pricing = getModelPricing(config.model);
 
   const totalInputTokens = inputTokensPerScenario * scenarioCount;
   const totalOutputTokens = outputTokensPerScenario * scenarioCount;
 
-  const inputCost = (totalInputTokens / 1_000_000) * inputPrice;
-  const outputCost = (totalOutputTokens / 1_000_000) * outputPrice;
+  const inputCost = (totalInputTokens / 1_000_000) * pricing.input;
+  const outputCost = (totalOutputTokens / 1_000_000) * pricing.output;
 
   return inputCost + outputCost;
 }
