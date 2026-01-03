@@ -134,6 +134,10 @@ export const DEFAULT_REDACTION_PATTERNS: RedactionPattern[] = [
  * Validates that the pattern is syntactically correct and compiles it
  * with the global flag. Throws a descriptive error if the pattern is invalid.
  *
+ * Note: Does not currently detect ReDoS-vulnerable patterns (catastrophic
+ * backtracking). Consider adding safe-regex library if patterns become
+ * user-controlled or if ReDoS becomes a concern.
+ *
  * @param pattern - The regex pattern string to validate and compile
  * @param name - Human-readable name for the pattern (used in error messages)
  * @returns Compiled RegExp with 'g' flag

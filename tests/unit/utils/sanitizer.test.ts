@@ -404,7 +404,9 @@ describe("validateRegexPattern", () => {
   it("throws ConfigLoadError for invalid regex syntax", async () => {
     const { validateRegexPattern } =
       await import("../../../src/utils/sanitizer.js");
-    expect(() => validateRegexPattern("[invalid(", "broken_pattern")).toThrow();
+    expect(() => validateRegexPattern("[invalid(", "broken_pattern")).toThrow(
+      /Invalid regex pattern/,
+    );
   });
 
   it("includes pattern name in error message", async () => {
