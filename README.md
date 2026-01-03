@@ -321,6 +321,34 @@ tests/
 - [ ] Phase 4: Cross-plugin conflict detection
 - [ ] Phase 5: Marketplace evaluation
 
+## Security Considerations
+
+### Permission Bypass
+
+By default, `execution.permission_bypass: true` automatically approves all permission prompts during evaluation. This is required for automated evaluation but means:
+
+- The Claude agent can perform any action the allowed tools permit
+- Use `disallowed_tools` to restrict dangerous operations
+- Consider running evaluations in isolated environments for untrusted plugins
+
+### Default Tool Restrictions
+
+The default `disallowed_tools: [Write, Edit, Bash]` prevents file modifications and shell commands during evaluation. Modify with caution:
+
+- Enable `Write`/`Edit` only if testing file-modifying plugins
+- Enable `Bash` only if testing shell-executing plugins
+- Use `rewind_file_changes: true` to restore files after each scenario
+
+### Sensitive Data
+
+- API keys are loaded from environment variables, never stored in config
+- PII sanitization is available but **disabled by default**; enable via `output.sanitize_logs` and `output.sanitize_transcripts` in config
+- Transcripts may contain user-provided data; enable sanitization or review before sharing
+
+### Plugin Loading
+
+Only local plugins are supported (`plugin.path`). There is no remote plugin loading, reducing supply chain risks.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and pull request guidelines.
