@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: Semantic Labeler
 
 # Claude-powered semantic labeling for both issues and PRs
@@ -129,8 +130,7 @@ jobs:
             ```
 
             After applying labels, briefly explain your reasoning.
-          claude_args: |
-            --allowedTools "Bash(gh issue:*)"
+          claude_args: '--allowedTools "Bash(gh issue:*)"'
 
   label-pr:
     name: Label Pull Request
@@ -239,5 +239,4 @@ jobs:
 
             After applying labels, briefly explain your reasoning.
           # PR job needs Read,Glob to analyze file changes for accurate component detection
-          claude_args: |
-            --allowedTools "Bash(gh pr:*),Read,Glob"
+          claude_args: '--allowedTools "Bash(gh pr:*),Read,Glob"'
