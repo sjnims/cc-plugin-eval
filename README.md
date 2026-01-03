@@ -342,8 +342,8 @@ The default `disallowed_tools: [Write, Edit, Bash]` prevents file modifications 
 ### Sensitive Data
 
 - API keys are loaded from environment variables, never stored in config
-- PII sanitization filters common patterns from verbose logs (see `src/utils/sanitizer.ts`)
-- Transcripts may contain user-provided data; review before sharing
+- PII sanitization is available but **disabled by default**; enable via `output.sanitize_logs` and `output.sanitize_transcripts` in config
+- Transcripts may contain user-provided data; enable sanitization or review before sharing
 
 ### Plugin Loading
 
