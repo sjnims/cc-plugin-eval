@@ -118,7 +118,37 @@ tests/
 
 ### Detection Strategy
 
-**Programmatic detection is primary** - parse `Skill`, `Task`, and `SlashCommand` tool calls from transcripts for 100% confidence detection. LLM judge is secondary, used only for quality assessment and edge cases where programmatic detection fails.
+**Programmatic detection is primary** - parse `Skill`, `Task`, and `SlashCommand` tool calls from transcripts for 100% confidence detection. For hooks, detect `SDKHookResponseMessage` events from the Agent SDK. LLM judge is secondary, used only for quality assessment and edge cases where programmatic detection fails.
+
+### Hooks Evaluation (Foundation - Phase 2)
+
+**Status**: Foundation code implemented but not yet integrated into pipeline (see Issue #50).
+
+Hooks evaluation foundation includes:
+
+- **Stage 1 (Analysis)**: `hook-analyzer.ts` parses hooks.json and extracts hook components
+  - Hook names use `EventType::Matcher` format (e.g., "PreToolUse::Write|Edit") to avoid delimiter conflicts
+  - Behavior inference from hook content (block, allow, modify, log, context)
+  - Matcher pattern parsing for tool matching
+
+- **Stage 2 (Generation)**: `hook-scenario-generator.ts` generates test scenarios deterministically
+  - Tool-to-prompt mapping for predictable hook triggering
+  - Event-type-specific scenarios (PreToolUse, Stop, SessionStart, etc.)
+  - Negative scenarios for matcher validation
+
+- **Stage 3 (Execution)**: Hook response capture via `SDKHookResponseMessage`
+  - `createHookResponseCollector()` processes SDK messages during execution
+  - 100% confidence detection from SDK events (no inference needed)
+
+- **Stage 4 (Evaluation)**: Programmatic hook detection
+  - `detectFromHookResponses()` extracts hook activations from captured responses
+  - `wasExpectedHookTriggered()` matches hooks by name and event type
+  - `detectAllComponentsWithHooks()` integrates hook detection with other components
+
+**Known Limitations**:
+- Session lifecycle hooks (SessionStart, SessionEnd) fire once per session
+- Detection relies on SDK emitting `hook_response` messages
+- MCP tool patterns may require LLM fallback (not yet implemented)
 
 ### Two SDK Integration Points
 

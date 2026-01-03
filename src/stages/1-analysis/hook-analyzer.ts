@@ -46,8 +46,20 @@ const HOOK_EVENT_TYPES: HookEventType[] = [
 /**
  * Parse a matcher pattern to extract tool names.
  *
+ * This function simplifies matcher patterns for display purposes. It does NOT
+ * perform full regex parsing - complex patterns are converted to simplified
+ * representations. For example, "mcp__.*" becomes "mcp__*".
+ *
  * @param matcher - Matcher pattern (e.g., "Write|Edit", "*", "mcp__.*")
  * @returns Array of tool names that would match
+ *
+ * @example
+ * ```typescript
+ * parseMatcherToTools("*");              // ["*"]
+ * parseMatcherToTools("Write|Edit");     // ["Write", "Edit"]
+ * parseMatcherToTools("mcp__.*");        // ["mcp__*"]
+ * parseMatcherToTools("Read");           // ["Read"]
+ * ```
  */
 export function parseMatcherToTools(matcher: string): string[] {
   // Wildcard matches everything
@@ -77,8 +89,20 @@ export function parseMatcherToTools(matcher: string): string[] {
 /**
  * Infer the expected behavior of a hook from its content.
  *
+ * Analyzes prompt/command text to classify hook behavior using keyword patterns.
+ *
  * @param hookContent - Combined prompt/command content
  * @returns Inferred expected behavior
+ *
+ * @example
+ * ```typescript
+ * inferExpectedBehavior("Return 'deny' if unsafe");  // "block"
+ * inferExpectedBehavior("Approve the operation");    // "allow"
+ * inferExpectedBehavior("Modify the input");         // "modify"
+ * inferExpectedBehavior("Log this operation");       // "log"
+ * inferExpectedBehavior("Load project context");     // "context"
+ * inferExpectedBehavior("Do something");             // "unknown"
+ * ```
  */
 export function inferExpectedBehavior(
   hookContent: string,
@@ -142,8 +166,30 @@ function generateDescription(
 /**
  * Analyze a hooks.json file and extract hook components.
  *
- * @param hooksPath - Path to hooks.json file
+ * Parses the hooks manifest from hooks.json, validates the structure,
+ * and extracts hook components for evaluation. Each handler becomes
+ * a separate HookComponent with a unique name in the format
+ * "EventType::Matcher" (e.g., "PreToolUse::Write|Edit").
+ *
+ * @param hooksPath - Absolute path to hooks.json file (from manifest.hooks field)
  * @returns Array of parsed hook components
+ *
+ * @example
+ * ```typescript
+ * const hooks = analyzeHook("/path/to/plugin/hooks/hooks.json");
+ * // Returns:
+ * // [
+ * //   {
+ * //     name: "PreToolUse::Write|Edit",
+ * //     path: "/path/to/plugin/hooks/hooks.json",
+ * //     eventType: "PreToolUse",
+ * //     matcher: "Write|Edit",
+ * //     expectedBehavior: "allow",
+ * //     matchingTools: ["Write", "Edit"],
+ * //     actions: [...]
+ * //   }
+ * // ]
+ * ```
  */
 export function analyzeHook(hooksPath: string): HookComponent[] {
   if (!existsSync(hooksPath)) {
@@ -209,7 +255,8 @@ export function analyzeHook(hooksPath: string): HookComponent[] {
       const matchingTools = parseMatcherToTools(handler.matcher);
 
       // Create unique name for this hook component
-      const name = `${eventType}:${handler.matcher}`;
+      // Use :: delimiter to avoid conflicts with matchers containing :
+      const name = `${eventType}::${handler.matcher}`;
 
       const component: HookComponent = {
         name,

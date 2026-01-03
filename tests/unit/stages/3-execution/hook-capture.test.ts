@@ -5,18 +5,23 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  analyzeHookResponses,
+  analyzeCaptures,
+  createHookResponseCollector,
   createToolCaptureCollector,
-  isTriggerTool,
-  isMcpTool,
-  parseMcpToolName,
-  filterTriggerCaptures,
+  extractCommandName,
   extractSkillName,
   extractTaskInfo,
-  extractCommandName,
-  analyzeCaptures,
+  filterTriggerCaptures,
+  isMcpTool,
+  isTriggerTool,
+  parseMcpToolName,
   TRIGGER_TOOL_NAMES,
 } from "../../../../src/stages/3-execution/hook-capture.js";
-import type { ToolCapture } from "../../../../src/types/index.js";
+import type {
+  HookResponseCapture,
+  ToolCapture,
+} from "../../../../src/types/index.js";
 
 describe("createToolCaptureCollector", () => {
   it("should create a collector with empty captures", () => {
@@ -302,5 +307,290 @@ describe("analyzeCaptures", () => {
 
     expect(result.skills).toEqual([]);
     expect(result.agents).toEqual([]);
+  });
+});
+
+describe("createHookResponseCollector", () => {
+  it("should create collector with empty responses initially", () => {
+    const collector = createHookResponseCollector();
+
+    expect(collector.responses).toEqual([]);
+    expect(typeof collector.processMessage).toBe("function");
+    expect(typeof collector.clear).toBe("function");
+  });
+
+  it("should process valid hook response message", () => {
+    const collector = createHookResponseCollector();
+
+    const mockMessage = {
+      type: "system",
+      subtype: "hook_response",
+      hook_name: "PreToolUse::Write|Edit",
+      hook_event: "PreToolUse",
+      stdout: "Hook executed successfully",
+      stderr: "",
+      exit_code: 0,
+    };
+
+    collector.processMessage(mockMessage);
+
+    expect(collector.responses).toHaveLength(1);
+    expect(collector.responses[0]?.hookName).toBe("PreToolUse::Write|Edit");
+    expect(collector.responses[0]?.hookEvent).toBe("PreToolUse");
+    expect(collector.responses[0]?.stdout).toBe("Hook executed successfully");
+    expect(collector.responses[0]?.stderr).toBe("");
+    expect(collector.responses[0]?.exitCode).toBe(0);
+    expect(collector.responses[0]?.timestamp).toBeTypeOf("number");
+  });
+
+  it("should ignore non-hook-response messages", () => {
+    const collector = createHookResponseCollector();
+
+    const mockMessages = [
+      { type: "text", content: "Hello" },
+      { type: "system", subtype: "other" },
+      { type: "tool_use", name: "Write" },
+      null,
+      undefined,
+      "string message",
+    ];
+
+    for (const msg of mockMessages) {
+      collector.processMessage(msg);
+    }
+
+    expect(collector.responses).toHaveLength(0);
+  });
+
+  it("should handle multiple hook response messages", () => {
+    const collector = createHookResponseCollector();
+
+    const messages = [
+      {
+        type: "system",
+        subtype: "hook_response",
+        hook_name: "PreToolUse::Write",
+        hook_event: "PreToolUse",
+        stdout: "First hook",
+        stderr: "",
+      },
+      {
+        type: "system",
+        subtype: "hook_response",
+        hook_name: "PostToolUse::Write",
+        hook_event: "PostToolUse",
+        stdout: "Second hook",
+        stderr: "",
+      },
+    ];
+
+    for (const msg of messages) {
+      collector.processMessage(msg);
+    }
+
+    expect(collector.responses).toHaveLength(2);
+    expect(collector.responses[0]?.hookName).toBe("PreToolUse::Write");
+    expect(collector.responses[1]?.hookName).toBe("PostToolUse::Write");
+  });
+
+  it("should handle hook response with stderr output", () => {
+    const collector = createHookResponseCollector();
+
+    const mockMessage = {
+      type: "system",
+      subtype: "hook_response",
+      hook_name: "PreToolUse::Bash",
+      hook_event: "PreToolUse",
+      stdout: "",
+      stderr: "Warning: validation failed",
+      exit_code: 1,
+    };
+
+    collector.processMessage(mockMessage);
+
+    expect(collector.responses).toHaveLength(1);
+    expect(collector.responses[0]?.stderr).toBe("Warning: validation failed");
+    expect(collector.responses[0]?.exitCode).toBe(1);
+  });
+
+  it("should clear all responses", () => {
+    const collector = createHookResponseCollector();
+
+    collector.processMessage({
+      type: "system",
+      subtype: "hook_response",
+      hook_name: "Stop::*",
+      hook_event: "Stop",
+      stdout: "Session ended",
+      stderr: "",
+    });
+
+    expect(collector.responses).toHaveLength(1);
+
+    collector.clear();
+
+    expect(collector.responses).toHaveLength(0);
+  });
+
+  it("should handle missing exit_code field", () => {
+    const collector = createHookResponseCollector();
+
+    const mockMessage = {
+      type: "system",
+      subtype: "hook_response",
+      hook_name: "SessionStart::*",
+      hook_event: "SessionStart",
+      stdout: "Session initialized",
+      stderr: "",
+    };
+
+    collector.processMessage(mockMessage);
+
+    expect(collector.responses).toHaveLength(1);
+    expect(collector.responses[0]?.exitCode).toBeUndefined();
+  });
+
+  it("should ignore messages with missing required fields", () => {
+    const collector = createHookResponseCollector();
+
+    const invalidMessages = [
+      // Missing hook_name
+      {
+        type: "system",
+        subtype: "hook_response",
+        hook_event: "PreToolUse",
+        stdout: "",
+        stderr: "",
+      },
+      // Missing hook_event
+      {
+        type: "system",
+        subtype: "hook_response",
+        hook_name: "PreToolUse:Write",
+        stdout: "",
+        stderr: "",
+      },
+      // Missing stdout
+      {
+        type: "system",
+        subtype: "hook_response",
+        hook_name: "PreToolUse:Write",
+        hook_event: "PreToolUse",
+        stderr: "",
+      },
+      // Wrong type
+      {
+        type: "assistant",
+        subtype: "hook_response",
+        hook_name: "PreToolUse:Write",
+        hook_event: "PreToolUse",
+        stdout: "",
+        stderr: "",
+      },
+      // Wrong subtype
+      {
+        type: "system",
+        subtype: "other",
+        hook_name: "PreToolUse:Write",
+        hook_event: "PreToolUse",
+        stdout: "",
+        stderr: "",
+      },
+    ];
+
+    for (const msg of invalidMessages) {
+      collector.processMessage(msg);
+    }
+
+    expect(collector.responses).toHaveLength(0);
+  });
+});
+
+describe("analyzeHookResponses", () => {
+  const mockResponses: HookResponseCapture[] = [
+    {
+      hookName: "PreToolUse::Write|Edit",
+      hookEvent: "PreToolUse",
+      stdout: "Hook 1",
+      stderr: "",
+      timestamp: Date.now(),
+    },
+    {
+      hookName: "PostToolUse::Write",
+      hookEvent: "PostToolUse",
+      stdout: "Hook 2",
+      stderr: "",
+      timestamp: Date.now(),
+    },
+    {
+      hookName: "Stop::*",
+      hookEvent: "Stop",
+      stdout: "Hook 3",
+      stderr: "",
+      timestamp: Date.now(),
+    },
+  ];
+
+  it("should return all responses when no filter provided", () => {
+    const filtered = analyzeHookResponses(mockResponses);
+
+    expect(filtered).toHaveLength(3);
+    expect(filtered).toEqual(mockResponses);
+  });
+
+  it("should filter by exact hook name match", () => {
+    const filtered = analyzeHookResponses(mockResponses, "Stop::*");
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]?.hookName).toBe("Stop::*");
+  });
+
+  it("should filter by event type and matcher pattern", () => {
+    const filtered = analyzeHookResponses(
+      mockResponses,
+      "PreToolUse::Write|Edit",
+    );
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]?.hookEvent).toBe("PreToolUse");
+    expect(filtered[0]?.hookName).toContain("Write|Edit");
+  });
+
+  it("should handle pattern matching with event type prefix", () => {
+    const filtered = analyzeHookResponses(mockResponses, "PostToolUse::Write");
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]?.hookEvent).toBe("PostToolUse");
+  });
+
+  it("should return empty array for non-matching hook name", () => {
+    const filtered = analyzeHookResponses(
+      mockResponses,
+      "SessionStart::NonExistent",
+    );
+
+    expect(filtered).toHaveLength(0);
+  });
+
+  it("should return empty array for empty responses", () => {
+    const filtered = analyzeHookResponses([], "PreToolUse::Write");
+
+    expect(filtered).toHaveLength(0);
+  });
+
+  it("should match partial hook name when using pattern", () => {
+    const responses: HookResponseCapture[] = [
+      {
+        hookName: "mcp__github__create_issue",
+        hookEvent: "PreToolUse",
+        stdout: "MCP hook",
+        stderr: "",
+        timestamp: Date.now(),
+      },
+    ];
+
+    const filtered = analyzeHookResponses(responses, "PreToolUse::mcp");
+
+    expect(filtered).toHaveLength(1);
   });
 });

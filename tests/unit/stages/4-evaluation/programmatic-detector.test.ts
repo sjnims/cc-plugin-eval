@@ -5,19 +5,23 @@
 import { describe, it, expect } from "vitest";
 
 import type {
+  HookResponseCapture,
+  ProgrammaticDetection,
+  TestScenario,
   ToolCapture,
   Transcript,
-  TestScenario,
-  ProgrammaticDetection,
 } from "../../../../src/types/index.js";
 
 import {
-  detectFromCaptures,
-  detectFromTranscript,
-  detectDirectCommandInvocation,
   detectAllComponents,
-  wasExpectedComponentTriggered,
+  detectAllComponentsWithHooks,
+  detectDirectCommandInvocation,
+  detectFromCaptures,
+  detectFromHookResponses,
+  detectFromTranscript,
   getUniqueDetections,
+  wasExpectedComponentTriggered,
+  wasExpectedHookTriggered,
 } from "../../../../src/stages/4-evaluation/programmatic-detector.js";
 
 /**
@@ -537,5 +541,336 @@ describe("getUniqueDetections", () => {
     const unique = getUniqueDetections(detections);
 
     expect(unique).toHaveLength(2);
+  });
+});
+
+describe("detectFromHookResponses", () => {
+  it("should detect hook activation from responses", () => {
+    const responses: HookResponseCapture[] = [
+      {
+        hookName: "PreToolUse::Write|Edit",
+        hookEvent: "PreToolUse",
+        stdout: "Hook executed",
+        stderr: "",
+        timestamp: Date.now(),
+      },
+    ];
+
+    const detections = detectFromHookResponses(responses);
+
+    expect(detections).toHaveLength(1);
+    expect(detections[0]).toMatchObject({
+      component_type: "hook",
+      component_name: "PreToolUse::Write|Edit",
+      confidence: 100,
+      tool_name: "PreToolUse",
+    });
+    expect(detections[0]?.evidence).toContain("Hook response captured");
+  });
+
+  it("should detect multiple hook activations", () => {
+    const responses: HookResponseCapture[] = [
+      {
+        hookName: "PreToolUse::Write",
+        hookEvent: "PreToolUse",
+        stdout: "First hook",
+        stderr: "",
+        timestamp: 1000,
+      },
+      {
+        hookName: "PostToolUse::Write",
+        hookEvent: "PostToolUse",
+        stdout: "Second hook",
+        stderr: "",
+        timestamp: 2000,
+      },
+    ];
+
+    const detections = detectFromHookResponses(responses);
+
+    expect(detections).toHaveLength(2);
+    expect(detections[0]?.component_name).toBe("PreToolUse::Write");
+    expect(detections[1]?.component_name).toBe("PostToolUse::Write");
+  });
+
+  it("should preserve timestamps from hook responses", () => {
+    const timestamp = 1700000000000;
+    const responses: HookResponseCapture[] = [
+      {
+        hookName: "Stop::*",
+        hookEvent: "Stop",
+        stdout: "Stop hook",
+        stderr: "",
+        timestamp,
+      },
+    ];
+
+    const detections = detectFromHookResponses(responses);
+
+    expect(detections[0]?.timestamp).toBe(timestamp);
+  });
+
+  it("should return empty array for empty responses", () => {
+    const detections = detectFromHookResponses([]);
+
+    expect(detections).toEqual([]);
+  });
+
+  it("should include hook event in tool_name", () => {
+    const responses: HookResponseCapture[] = [
+      {
+        hookName: "SessionStart::*",
+        hookEvent: "SessionStart",
+        stdout: "Session initialized",
+        stderr: "",
+        timestamp: Date.now(),
+      },
+    ];
+
+    const detections = detectFromHookResponses(responses);
+
+    expect(detections[0]?.tool_name).toBe("SessionStart");
+  });
+
+  it("should handle hooks with stderr output", () => {
+    const responses: HookResponseCapture[] = [
+      {
+        hookName: "PreToolUse::Bash",
+        hookEvent: "PreToolUse",
+        stdout: "",
+        stderr: "Warning: validation failed",
+        exitCode: 1,
+        timestamp: Date.now(),
+      },
+    ];
+
+    const detections = detectFromHookResponses(responses);
+
+    expect(detections).toHaveLength(1);
+    expect(detections[0]?.evidence).toContain("Hook response captured");
+  });
+});
+
+describe("wasExpectedHookTriggered", () => {
+  const mockResponses: HookResponseCapture[] = [
+    {
+      hookName: "PreToolUse::Write|Edit",
+      hookEvent: "PreToolUse",
+      stdout: "Hook 1",
+      stderr: "",
+      timestamp: Date.now(),
+    },
+    {
+      hookName: "PostToolUse::Write",
+      hookEvent: "PostToolUse",
+      stdout: "Hook 2",
+      stderr: "",
+      timestamp: Date.now(),
+    },
+    {
+      hookName: "Stop::*",
+      hookEvent: "Stop",
+      stdout: "Hook 3",
+      stderr: "",
+      timestamp: Date.now(),
+    },
+  ];
+
+  it("should return true when exact hook name matches", () => {
+    const triggered = wasExpectedHookTriggered(mockResponses, "Stop::*");
+
+    expect(triggered).toBe(true);
+  });
+
+  it("should return true when event type and matcher match", () => {
+    const triggered = wasExpectedHookTriggered(
+      mockResponses,
+      "PreToolUse::Write|Edit",
+    );
+
+    expect(triggered).toBe(true);
+  });
+
+  it("should match by event type when provided", () => {
+    const triggered = wasExpectedHookTriggered(
+      mockResponses,
+      "PostToolUse::Write",
+      "PostToolUse",
+    );
+
+    expect(triggered).toBe(true);
+  });
+
+  it("should return false when event type mismatches", () => {
+    const triggered = wasExpectedHookTriggered(
+      mockResponses,
+      "PreToolUse::Write",
+      "PostToolUse",
+    );
+
+    expect(triggered).toBe(false);
+  });
+
+  it("should return false when no matching hook", () => {
+    const triggered = wasExpectedHookTriggered(
+      mockResponses,
+      "SessionStart::*",
+    );
+
+    expect(triggered).toBe(false);
+  });
+
+  it("should return false for empty responses", () => {
+    const triggered = wasExpectedHookTriggered([], "PreToolUse::Write");
+
+    expect(triggered).toBe(false);
+  });
+
+  it("should match partial matcher in hook name", () => {
+    const triggered = wasExpectedHookTriggered(
+      mockResponses,
+      "PreToolUse::Write",
+    );
+
+    expect(triggered).toBe(true);
+  });
+
+  it("should handle hook names without colon delimiter", () => {
+    const responses: HookResponseCapture[] = [
+      {
+        hookName: "custom-hook-name",
+        hookEvent: "PreToolUse",
+        stdout: "Hook",
+        stderr: "",
+        timestamp: Date.now(),
+      },
+    ];
+
+    const triggered = wasExpectedHookTriggered(
+      responses,
+      "custom-hook-name",
+    );
+
+    expect(triggered).toBe(true);
+  });
+});
+
+describe("detectAllComponentsWithHooks", () => {
+  it("should detect both regular components and hooks", () => {
+    const captures = [createToolCapture("Skill", { skill: "commit" })];
+    const transcript = createTranscript([]);
+    const scenario = createScenario({ component_type: "hook" });
+    const hookResponses: HookResponseCapture[] = [
+      {
+        hookName: "PreToolUse::Write",
+        hookEvent: "PreToolUse",
+        stdout: "Hook",
+        stderr: "",
+        timestamp: Date.now(),
+      },
+    ];
+
+    const detections = detectAllComponentsWithHooks(
+      captures,
+      transcript,
+      scenario,
+      hookResponses,
+    );
+
+    expect(detections.length).toBeGreaterThan(0);
+    expect(detections.some((d) => d.component_type === "skill")).toBe(true);
+    expect(detections.some((d) => d.component_type === "hook")).toBe(true);
+  });
+
+  it("should filter hooks by scenario component_ref", () => {
+    const captures: ToolCapture[] = [];
+    const transcript = createTranscript([]);
+    const scenario = createScenario({
+      component_type: "hook",
+      component_ref: "PreToolUse::Write",
+    });
+    const hookResponses: HookResponseCapture[] = [
+      {
+        hookName: "PreToolUse::Write",
+        hookEvent: "PreToolUse",
+        stdout: "Relevant hook",
+        stderr: "",
+        timestamp: 1000,
+      },
+      {
+        hookName: "PostToolUse::Read",
+        hookEvent: "PostToolUse",
+        stdout: "Irrelevant hook",
+        stderr: "",
+        timestamp: 2000,
+      },
+    ];
+
+    const detections = detectAllComponentsWithHooks(
+      captures,
+      transcript,
+      scenario,
+      hookResponses,
+    );
+
+    const hookDetections = detections.filter((d) => d.component_type === "hook");
+    expect(hookDetections).toHaveLength(1);
+    expect(hookDetections[0]?.tool_name).toBe("PreToolUse");
+  });
+
+  it("should not add hook detections for non-hook scenarios", () => {
+    const captures = [createToolCapture("Skill", { skill: "commit" })];
+    const transcript = createTranscript([]);
+    const scenario = createScenario({ component_type: "skill" });
+    const hookResponses: HookResponseCapture[] = [
+      {
+        hookName: "PreToolUse::Write",
+        hookEvent: "PreToolUse",
+        stdout: "Hook",
+        stderr: "",
+        timestamp: Date.now(),
+      },
+    ];
+
+    const detections = detectAllComponentsWithHooks(
+      captures,
+      transcript,
+      scenario,
+      hookResponses,
+    );
+
+    expect(detections.every((d) => d.component_type !== "hook")).toBe(true);
+  });
+
+  it("should work without hook responses", () => {
+    const captures = [createToolCapture("Skill", { skill: "commit" })];
+    const transcript = createTranscript([]);
+    const scenario = createScenario({ component_type: "skill" });
+
+    const detections = detectAllComponentsWithHooks(
+      captures,
+      transcript,
+      scenario,
+    );
+
+    expect(detections).toHaveLength(1);
+    expect(detections[0]?.component_type).toBe("skill");
+  });
+
+  it("should deduplicate detections", () => {
+    const captures = [
+      createToolCapture("Skill", { skill: "commit" }),
+      createToolCapture("Skill", { skill: "commit" }),
+    ];
+    const transcript = createTranscript([]);
+    const scenario = createScenario({ component_type: "skill" });
+
+    const detections = detectAllComponentsWithHooks(
+      captures,
+      transcript,
+      scenario,
+    );
+
+    expect(detections).toHaveLength(1);
   });
 });

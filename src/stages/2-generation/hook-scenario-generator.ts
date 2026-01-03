@@ -32,8 +32,20 @@ const TOOL_PROMPTS: Record<string, string> = {
 /**
  * Get a prompt that will trigger a specific tool.
  *
+ * Returns a deterministic prompt designed to reliably cause Claude to invoke
+ * the specified tool. This enables predictable hook testing without LLM calls.
+ *
  * @param tool - Tool name
  * @returns Prompt that should invoke the tool
+ *
+ * @example
+ * ```typescript
+ * getToolPrompt("Write");   // "Create a new file called test-output.txt..."
+ * getToolPrompt("Read");    // "Read the contents of the file package.json..."
+ * getToolPrompt("Bash");    // "Run the command npm --version..."
+ * getToolPrompt("*");       // "What is the current working directory..."
+ * getToolPrompt("mcp__github__create"); // "Use the MCP tool mcp__github__create..."
+ * ```
  */
 export function getToolPrompt(tool: string): string {
   // Check direct mapping
@@ -300,10 +312,19 @@ export function generateAllHookScenarios(
 
 /**
  * Get expected scenario count for hooks.
- * Used for cost estimation.
+ *
+ * Calculates the number of test scenarios that will be generated for the
+ * given hooks. Used for cost estimation before scenario generation.
  *
  * @param hooks - Array of hook components
  * @returns Expected scenario count
+ *
+ * @example
+ * ```typescript
+ * const hooks = analyzeHooks("/path/to/hooks.json");
+ * const count = getExpectedHookScenarioCount(hooks);
+ * console.log(`Will generate approximately ${count} scenarios`);
+ * ```
  */
 export function getExpectedHookScenarioCount(hooks: HookComponent[]): number {
   let count = 0;

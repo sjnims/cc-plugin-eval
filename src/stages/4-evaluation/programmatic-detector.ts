@@ -390,7 +390,7 @@ export function detectFromHookResponses(
  * Check if expected hook was triggered.
  *
  * @param hookResponses - Hook response captures from execution
- * @param expectedHookName - Expected hook component name (e.g., "PreToolUse:Write|Edit")
+ * @param expectedHookName - Expected hook component name (e.g., "PreToolUse::Write|Edit")
  * @param expectedEventType - Optional expected event type
  * @returns True if expected hook was detected
  *
@@ -398,7 +398,7 @@ export function detectFromHookResponses(
  * ```typescript
  * const triggered = wasExpectedHookTriggered(
  *   executionResult.hook_responses,
- *   "PreToolUse:Write|Edit",
+ *   "PreToolUse::Write|Edit",
  *   "PreToolUse"
  * );
  * ```
@@ -419,9 +419,9 @@ export function wasExpectedHookTriggered(
     }
 
     // Match by hook name
-    // The expected name format is "EventType:Matcher" (e.g., "PreToolUse:Write|Edit")
-    if (expectedHookName.includes(":")) {
-      const [eventType, matcher] = expectedHookName.split(":");
+    // The expected name format is "EventType::Matcher" (e.g., "PreToolUse::Write|Edit")
+    if (expectedHookName.includes("::")) {
+      const [eventType, matcher] = expectedHookName.split("::");
       if (eventType && response.hookEvent !== eventType) {
         return false;
       }
@@ -463,15 +463,15 @@ export function detectAllComponentsWithHooks(
 
     // Filter to matching hooks based on scenario
     const relevantHookDetections = hookDetections.filter((d) => {
-      // Match by component reference (e.g., "PreToolUse:Write|Edit")
+      // Match by component reference (e.g., "PreToolUse::Write|Edit")
       const expectedRef = scenario.component_ref;
       if (!expectedRef) {
         return true;
       }
 
       // Parse expected reference
-      if (expectedRef.includes(":")) {
-        const [eventType] = expectedRef.split(":");
+      if (expectedRef.includes("::")) {
+        const [eventType] = expectedRef.split("::");
         return d.tool_name === eventType;
       }
 

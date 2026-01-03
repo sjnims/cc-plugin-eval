@@ -434,8 +434,8 @@ export function analyzeHookResponses(
     }
 
     // Pattern match (hook name may include event type)
-    if (expectedHookName.includes(":")) {
-      const [eventType, matcher] = expectedHookName.split(":");
+    if (expectedHookName.includes("::")) {
+      const [eventType, matcher] = expectedHookName.split("::");
       return r.hookEvent === eventType && r.hookName.includes(matcher ?? "");
     }
 

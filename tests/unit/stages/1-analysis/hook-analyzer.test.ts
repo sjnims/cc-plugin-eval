@@ -126,8 +126,8 @@ describe("analyzeHook", () => {
       (h) => h.eventType === "PreToolUse" && h.matcher === "Write|Edit",
     );
 
-    // The fixture has "Return 'approve' or 'deny'" which should infer block/allow
-    expect(writeHook?.expectedBehavior).toMatch(/block|allow/);
+    // The fixture contains "approve" keyword, should infer "allow"
+    expect(writeHook?.expectedBehavior).toBe("allow");
   });
 });
 
