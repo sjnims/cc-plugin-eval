@@ -313,10 +313,34 @@ evaluation:
 #   junit_test_suite_name - Test suite name for JUnit XML output
 #     Possible values: Any string
 #     Default: "cc-plugin-eval"
+#
+#   sanitize_transcripts - Redact PII from saved transcript files
+#     Possible values:
+#       - true - Apply PII redaction before saving transcripts
+#       - false - Save transcripts as-is
+#     Default: false
+#
+#   sanitize_logs - Redact PII from verbose console output
+#     Possible values:
+#       - true - Apply PII redaction to console logs
+#       - false - Log output as-is
+#     Default: false
+#
+#   sanitization - Advanced sanitization settings (optional)
+#     custom_patterns - Additional regex patterns to redact
+#       - pattern: Regex string (will be compiled with 'g' flag)
+#       - replacement: Replacement string for matches
+#     Default patterns include: API keys, JWTs, emails, phone numbers, SSNs, credit cards
 output:
   format: "json"
   include_cli_summary: true
   junit_test_suite_name: "cc-plugin-eval"
+  sanitize_transcripts: false
+  sanitize_logs: false
+  # sanitization:
+  #   custom_patterns:
+  #     - pattern: "SECRET-\\w+"
+  #       replacement: "[REDACTED_SECRET]"
 
 # ==============================================================================
 # RESUME CONFIGURATION
