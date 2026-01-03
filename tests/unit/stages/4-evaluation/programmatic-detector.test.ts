@@ -565,7 +565,8 @@ describe("detectFromHookResponses", () => {
       confidence: 100,
       tool_name: "PreToolUse",
     });
-    expect(detections[0]?.evidence).toContain("Hook response captured");
+    expect(detections[0]?.evidence).toContain("Hook response:");
+    expect(detections[0]?.evidence).toContain("fired");
   });
 
   it("should detect multiple hook activations", () => {
@@ -647,7 +648,8 @@ describe("detectFromHookResponses", () => {
     const detections = detectFromHookResponses(responses);
 
     expect(detections).toHaveLength(1);
-    expect(detections[0]?.evidence).toContain("Hook response captured");
+    expect(detections[0]?.evidence).toContain("Hook response:");
+    expect(detections[0]?.evidence).toContain("exit code:");
   });
 });
 
@@ -746,10 +748,7 @@ describe("wasExpectedHookTriggered", () => {
       },
     ];
 
-    const triggered = wasExpectedHookTriggered(
-      responses,
-      "custom-hook-name",
-    );
+    const triggered = wasExpectedHookTriggered(responses, "custom-hook-name");
 
     expect(triggered).toBe(true);
   });
@@ -813,7 +812,9 @@ describe("detectAllComponentsWithHooks", () => {
       hookResponses,
     );
 
-    const hookDetections = detections.filter((d) => d.component_type === "hook");
+    const hookDetections = detections.filter(
+      (d) => d.component_type === "hook",
+    );
     expect(hookDetections).toHaveLength(1);
     expect(hookDetections[0]?.tool_name).toBe("PreToolUse");
   });

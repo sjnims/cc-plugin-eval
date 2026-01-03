@@ -146,6 +146,7 @@ Hooks evaluation foundation includes:
   - `detectAllComponentsWithHooks()` integrates hook detection with other components
 
 **Known Limitations**:
+
 - Session lifecycle hooks (SessionStart, SessionEnd) fire once per session
 - Detection relies on SDK emitting `hook_response` messages
 - MCP tool patterns may require LLM fallback (not yet implemented)
