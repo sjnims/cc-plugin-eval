@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: CI Failure Analysis
 
 # Automatically analyze failed CI runs and provide actionable fix suggestions
@@ -174,5 +175,4 @@ jobs:
 
             After posting (or if no PR found), summarize what you found and what action was taken.
 
-          claude_args: |
-            --allowedTools "Bash(gh run:*),Bash(gh pr:*)"
+          claude_args: '--allowedTools "Bash(gh run:*),Bash(gh pr:*)"'
