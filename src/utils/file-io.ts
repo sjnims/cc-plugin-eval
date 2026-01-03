@@ -184,7 +184,12 @@ export function parseFrontmatter(content: string): {
   const [, yamlContent, body] = match;
 
   try {
-    const frontmatter = parseYaml(yamlContent ?? "") as Record<string, unknown>;
+    const parsed: unknown = parseYaml(yamlContent ?? "");
+    // parseYaml returns null for empty content, coalesce to empty object
+    const frontmatter =
+      parsed !== null && typeof parsed === "object"
+        ? (parsed as Record<string, unknown>)
+        : {};
     return { frontmatter, body: body ?? "" };
   } catch {
     return { frontmatter: {}, body: content };

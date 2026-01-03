@@ -370,7 +370,6 @@ key: value
 
   it("handles empty frontmatter section", () => {
     // Note: the regex requires at least one newline between delimiters
-    // YAML parser returns null for empty content, which gets cast as frontmatter
     const content = `---
 
 ---
@@ -378,8 +377,8 @@ Body after empty frontmatter`;
 
     const result = parseFrontmatter(content);
 
-    // parseYaml returns null for empty YAML, not {}
-    expect(result.frontmatter).toBeNull();
+    // parseYaml returns null for empty YAML, but we coalesce to {}
+    expect(result.frontmatter).toEqual({});
     expect(result.body).toBe("Body after empty frontmatter");
   });
 
